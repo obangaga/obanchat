@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OBAN AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cyan: #00fff7;
+    --pink: #ff006e;
+    --yellow: #ffe600;
+    --bg: #050a0e;
+    --bg2: #0a1628;
+    --glass: rgba(0,255,247,0.04);
+    --border: rgba(0,255,247,0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--cyan);
+    font-family: 'Share Tech Mono', monospace;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,247,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,247,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    animation: gridMove 20s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Scanlines */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.15) 2px,
+      rgba(0,0,0,0.15) 4px
+    );
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  @keyframes gridMove {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(40px); }
+  }
+
+  /* HEADER */
+  .header {
+    position: relative;
+    z-index: 10;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(0,255,247,0.05) 0%, transparent 100%);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .header-logo {
+    width: 36px;
+    height: 36px;
+    border: 2px solid var(--cyan);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Orbitron', monospace;
+    font-weight: 900;
+    font-size: 14px;
+    color: var(--cyan);
+    box-shadow: 0 0 15px var(--cyan), inset 0 0 10px rgba(0,255,247,0.1);
+    animation: pulse 2s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 15px var(--cyan), inset 0 0 10px rgba(0,255,247,0.1); }
+    50% { box-shadow: 0 0 30px var(--cyan), 0 0 60px rgba(0,255,247,0.3), inset 0 0 20px rgba(0,255,247,0.2); }
+  }
+
+  .header-info h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 4px;
+    color: var(--cyan);
+    text-shadow: 0 0 20px var(--cyan);
+  }
+
+  .header-info .status {
+    font-size: 10px;
+    color: var(--pink);
+    letter-spacing: 2px;
+    animation: blink 1.5s step-end infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .header-decor {
+    margin-left: auto;
+    font-size: 10px;
+    color: rgba(0,255,247,0.4);
+    text-align: right;
+    line-height: 1.6;
+  }
+
+  /* CHAT AREA */
+  .chat-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 16px;
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .chat-area::-webkit-scrollbar { width: 4px; }
+  .chat-area::-webkit-scrollbar-track { background: transparent; }
+  .chat-area::-webkit-scrollbar-thumb { background: var(--cyan); border-radius: 2px; }
+
+  /* Welcome message */
+  .welcome {
+    text-align: center;
+    padding: 30px 20px;
+    animation: fadeIn 1s ease;
+  }
+
+  .welcome-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--cyan);
+    text-shadow: 0 0 30px var(--cyan), 0 0 60px rgba(0,255,247,0.5);
+    letter-spacing: 6px;
+    margin-bottom: 8px;
+  }
+
+  .welcome-sub {
+    font-size: 11px;
+    color: var(--pink);
+    letter-spacing: 3px;
+    margin-bottom: 20px;
+  }
+
+  .welcome-line {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    margin: 16px 0;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Messages */
+  .message {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    animation: slideIn 0.3s ease;
+    max-width: 88%;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .message.user {
+    align-self: flex-end;
+    align-items: flex-end;
+    animation: slideInRight 0.3s ease;
+  }
+
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .message-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: rgba(0,255,247,0.5);
+    padding: 0 4px;
+  }
+
+  .message.user .message-label {
+    color: rgba(255,0,110,0.6);
+  }
+
+  .message-bubble {
+    padding: 12px 16px;
+    border-radius: 2px;
+    font-size: 13px;
+    line-height: 1.7;
+    position: relative;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .message.ai .message-bubble {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--cyan);
+    color: rgba(0,255,247,0.9);
+    box-shadow: 0 0 20px rgba(0,255,247,0.05), inset 0 0 20px rgba(0,255,247,0.02);
+  }
+
+  .message.user .message-bubble {
+    background: rgba(255,0,110,0.08);
+    border: 1px solid rgba(255,0,110,0.2);
+    border-right: 3px solid var(--pink);
+    color: rgba(255,200,220,0.9);
+    box-shadow: 0 0 20px rgba(255,0,110,0.05);
+  }
+
+  /* Corner decorations */
+  .message.ai .message-bubble::before {
+    content: '▶';
+    position: absolute;
+    top: -1px;
+    left: -12px;
+    font-size: 8px;
+    color: var(--cyan);
+  }
+
+  /* Typing indicator */
+  .typing {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--cyan);
+    width: fit-content;
+    max-width: 120px;
+  }
+
+  .typing span {
+    width: 6px;
+    height: 6px;
+    background: var(--cyan);
+    border-radius: 50%;
+    animation: typingDot 1.2s ease-in-out infinite;
+    box-shadow: 0 0 6px var(--cyan);
+  }
+
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes typingDot {
+    0%, 100% { transform: translateY(0); opacity: 0.4; }
+    50% { transform: translateY(-6px); opacity: 1; }
+  }
+
+  /* INPUT AREA */
+  .input-area {
+    position: relative;
+    z-index: 10;
+    padding: 12px 16px 16px;
+    border-top: 1px solid var(--border);
+    background: linear-gradient(0deg, rgba(0,255,247,0.03) 0%, transparent 100%);
+  }
+
+  .input-wrapper {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 10px 12px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+
+  .input-wrapper:focus-within {
+    border-color: var(--cyan);
+    box-shadow: 0 0 20px rgba(0,255,247,0.1), inset 0 0 10px rgba(0,255,247,0.03);
+  }
+
+  .input-wrapper textarea {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--cyan);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    resize: none;
+    min-height: 20px;
+    max-height: 100px;
+    overflow-y: auto;
+  }
+
+  .input-wrapper textarea::placeholder {
+    color: rgba(0,255,247,0.25);
+  }
+
+  .input-wrapper textarea::-webkit-scrollbar { width: 2px; }
+  .input-wrapper textarea::-webkit-scrollbar-thumb { background: var(--cyan); }
+
+  .send-btn {
+    background: transparent;
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    width: 34px;
+    height: 34px;
+    border-radius: 2px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    box-shadow: 0 0 10px rgba(0,255,247,0.1);
+  }
+
+  .send-btn:hover, .send-btn:active {
+    background: rgba(0,255,247,0.1);
+    box-shadow: 0 0 20px rgba(0,255,247,0.3);
+  }
+
+  .send-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .input-hint {
+    font-size: 9px;
+    color: rgba(0,255,247,0.2);
+    letter-spacing: 1px;
+    margin-top: 6px;
+    padding: 0 2px;
+  }
+
+  /* API Key setup */
+  .setup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(5,10,14,0.95);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .setup-box {
+    width: 100%;
+    max-width: 340px;
+    border: 1px solid var(--cyan);
+    background: var(--bg2);
+    padding: 28px 24px;
+    box-shadow: 0 0 40px rgba(0,255,247,0.1);
+    animation: fadeIn 0.5s ease;
+  }
+
+  .setup-box h2 {
+    font-family: 'Orbitron', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--cyan);
+    letter-spacing: 3px;
+    text-shadow: 0 0 20px var(--cyan);
+    margin-bottom: 6px;
+  }
+
+  .setup-box p {
+    font-size: 11px;
+    color: rgba(0,255,247,0.5);
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+
+  .setup-box input {
+    width: 100%;
+    background: rgba(0,255,247,0.05);
+    border: 1px solid var(--border);
+    border-bottom: 2px solid var(--cyan);
+    color: var(--cyan);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    padding: 10px 12px;
+    outline: none;
+    margin-bottom: 16px;
+    letter-spacing: 1px;
+  }
+
+  .setup-box input::placeholder { color: rgba(0,255,247,0.2); }
+
+  .setup-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    font-family: 'Orbitron', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 0 20px rgba(0,255,247,0.1);
+  }
+
+  .setup-btn:hover {
+    background: rgba(0,255,247,0.1);
+    box-shadow: 0 0 30px rgba(0,255,247,0.3);
+  }
+
+  .setup-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    margin: 20px 0;
+  }
+
+  /* Corner decorations for setup box */
+  .setup-box::before {
+    content: '◆ SYSTEM INIT ◆';
+    display: block;
+    font-size: 9px;
+    color: var(--pink);
+    letter-spacing: 3px;
+    margin-bottom: 14px;
+    animation: blink 2s step-end infinite;
+  }
+</style>
+</head>
+<body>
+
+<!-- API Key Setup -->
+<div class="setup-overlay" id="setupOverlay">
+  <div class="setup-box">
+    <h2>OBAN.AI</h2>
+    <p>Masukkan Groq API Key untuk mengaktifkan sistem. Key disimpan di browser Anda.</p>
+    <div class="setup-divider"></div>
+    <input type="password" id="apiKeyInput" placeholder="gsk_xxxxxxxxxxxxxxxxxxxx" />
+    <button class="setup-btn" onclick="saveApiKey()">▶ INISIALISASI SISTEM</button>
+  </div>
+</div>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-logo">O</div>
+  <div class="header-info">
+    <h1>OBAN</h1>
+    <div class="status">● ONLINE // READY</div>
+  </div>
+  <div class="header-decor">
+    <div>SYS v2.0.77</div>
+    <div style="color:rgba(255,230,0,0.5)">GROQ ENGINE</div>
+  </div>
+</div>
+
+<!-- Chat Area -->
+<div class="chat-area" id="chatArea">
+  <div class="welcome">
+    <div class="welcome-title">OBAN</div>
+    <div class="welcome-sub">ARTIFICIAL INTELLIGENCE // PERSONAL UNIT</div>
+    <div class="welcome-line"></div>
+    <div style="font-size:11px; color:rgba(0,255,247,0.4); letter-spacing:1px; line-height:1.8">
+      SISTEM AKTIF. SIAP MENERIMA INPUT.<br>
+      KETIK PESAN UNTUK MEMULAI.
+    </div>
+  </div>
+</div>
+
+<!-- Input Area -->
+<div class="input-area">
+  <div class="input-wrapper">
+    <textarea id="messageInput" placeholder="Kirim pesan ke OBAN..." rows="1" 
+      onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+    <button class="send-btn" id="sendBtn" onclick="sendMessage()">▶</button>
+  </div>
+  <div class="input-hint">ENTER = KIRIM &nbsp;|&nbsp; SHIFT+ENTER = BARIS BARU</div>
+</div>
+
+<script>
+  let apiKey = localStorage.getItem('oban_api_key') || '';
+  let isLoading = false;
+  let conversationHistory = [];
+
+  // Check if API key exists
+  if (apiKey) {
+    document.getElementById('setupOverlay').style.display = 'none';
+  }
+
+  function saveApiKey() {
+    const key = document.getElementById('apiKeyInput').value.trim();
+    if (!key) return;
+    apiKey = key;
+    localStorage.setItem('oban_api_key', key);
+    document.getElementById('setupOverlay').style.display = 'none';
+    document.getElementById('messageInput').focus();
+  }
+
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  function addMessage(role, text) {
+    const chatArea = document.getElementById('chatArea');
+    const div = document.createElement('div');
+    div.className = `message ${role}`;
+
+    const label = document.createElement('div');
+    label.className = 'message-label';
+    label.textContent = role === 'ai' ? '◆ OBAN' : 'USER ◆';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'message-bubble';
+    bubble.textContent = text;
+
+    div.appendChild(label);
+    div.appendChild(bubble);
+    chatArea.appendChild(div);
+    chatArea.scrollTop = chatArea.scrollHeight;
+    return div;
+  }
+
+  function showTyping() {
+    const chatArea = document.getElementById('chatArea');
+    const div = document.createElement('div');
+    div.id = 'typingIndicator';
+    div.className = 'message ai';
+
+    const label = document.createElement('div');
+    label.className = 'message-label';
+    label.textContent = '◆ OBAN';
+
+    const typing = document.createElement('div');
+    typing.className = 'typing';
+    typing.innerHTML = '<span></span><span></span><span></span>';
+
+    div.appendChild(label);
+    div.appendChild(typing);
+    chatArea.appendChild(div);
+    chatArea.scrollTop = chatArea.scrollHeight;
+  }
+
+  function removeTyping() {
+    const el = document.getElementById('typingIndicator');
+    if (el) el.remove();
+  }
+
+  async function sendMessage() {
+    if (isLoading) return;
+    const input = document.getElementById('messageInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    input.value = '';
+    input.style.height = 'auto';
+    isLoading = true;
+    document.getElementById('sendBtn').disabled = true;
+
+    addMessage('user', text);
+    conversationHistory.push({ role: 'user', content: text });
+    showTyping();
+
+    try {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          messages: conversationHistory,
+          max_tokens: 1024
+        })
+      });
+
+      const data = await response.json();
+      removeTyping();
+
+      if (data.choices && data.choices[0]) {
+        const reply = data.choices[0].message.content;
+        conversationHistory.push({ role: 'assistant', content: reply });
+        addMessage('ai', reply);
+      } else {
+        addMessage('ai', '⚠ ERROR: ' + (data.error?.message || 'Gagal mendapat respons'));
+      }
+    } catch (err) {
+      removeTyping();
+      addMessage('ai', '⚠ CONNECTION ERROR: Periksa koneksi internet Anda.');
+    }
+
+    isLoading = false;
+    document.getElementById('sendBtn').disabled = false;
+    input.focus();
+  }
+
+  // Focus input on load
+  setTimeout(() => {
+    if (apiKey) document.getElementById('messageInput').focus();
+    else document.getElementById('apiKeyInput').focus();
+  }, 300);
+</script>
+</body>
+</html>
