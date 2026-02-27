@@ -29,7 +29,6 @@
     position: relative;
   }
 
-  /* Animated grid background */
   body::before {
     content: '';
     position: fixed;
@@ -43,7 +42,6 @@
     z-index: 0;
   }
 
-  /* Scanlines */
   body::after {
     content: '';
     position: fixed;
@@ -64,7 +62,6 @@
     100% { transform: translateY(40px); }
   }
 
-  /* HEADER */
   .header {
     position: relative;
     z-index: 10;
@@ -127,7 +124,35 @@
     line-height: 1.6;
   }
 
-  /* CHAT AREA */
+  /* Crypto ticker */
+  .crypto-ticker {
+    position: relative;
+    z-index: 10;
+    background: rgba(0,255,247,0.03);
+    border-bottom: 1px solid var(--border);
+    padding: 6px 16px;
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+
+  .crypto-ticker::-webkit-scrollbar { display: none; }
+
+  .ticker-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .ticker-name { color: rgba(0,255,247,0.5); }
+  .ticker-price { color: var(--cyan); font-weight: bold; }
+  .ticker-change.up { color: #00ff88; }
+  .ticker-change.down { color: var(--pink); }
+
   .chat-area {
     flex: 1;
     overflow-y: auto;
@@ -143,10 +168,9 @@
   .chat-area::-webkit-scrollbar-track { background: transparent; }
   .chat-area::-webkit-scrollbar-thumb { background: var(--cyan); border-radius: 2px; }
 
-  /* Welcome message */
   .welcome {
     text-align: center;
-    padding: 30px 20px;
+    padding: 20px 20px;
     animation: fadeIn 1s ease;
   }
 
@@ -164,14 +188,41 @@
     font-size: 11px;
     color: var(--pink);
     letter-spacing: 3px;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
   }
 
   .welcome-line {
     width: 100%;
     height: 1px;
     background: linear-gradient(90deg, transparent, var(--cyan), transparent);
-    margin: 16px 0;
+    margin: 12px 0;
+  }
+
+  .quick-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 12px;
+  }
+
+  .quick-btn {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    color: rgba(0,255,247,0.7);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 2px;
+  }
+
+  .quick-btn:hover, .quick-btn:active {
+    background: rgba(0,255,247,0.1);
+    border-color: var(--cyan);
+    color: var(--cyan);
   }
 
   @keyframes fadeIn {
@@ -179,7 +230,6 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
-  /* Messages */
   .message {
     display: flex;
     flex-direction: column;
@@ -211,9 +261,7 @@
     padding: 0 4px;
   }
 
-  .message.user .message-label {
-    color: rgba(255,0,110,0.6);
-  }
+  .message.user .message-label { color: rgba(255,0,110,0.6); }
 
   .message-bubble {
     padding: 12px 16px;
@@ -238,10 +286,8 @@
     border: 1px solid rgba(255,0,110,0.2);
     border-right: 3px solid var(--pink);
     color: rgba(255,200,220,0.9);
-    box-shadow: 0 0 20px rgba(255,0,110,0.05);
   }
 
-  /* Corner decorations */
   .message.ai .message-bubble::before {
     content: '▶';
     position: absolute;
@@ -251,7 +297,39 @@
     color: var(--cyan);
   }
 
-  /* Typing indicator */
+  /* Crypto card in chat */
+  .crypto-card {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--yellow);
+    padding: 14px 16px;
+    border-radius: 2px;
+    animation: slideIn 0.3s ease;
+    max-width: 88%;
+  }
+
+  .crypto-card-title {
+    font-size: 9px;
+    color: var(--yellow);
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+  }
+
+  .crypto-card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(0,255,247,0.05);
+    font-size: 12px;
+  }
+
+  .crypto-card-row:last-child { border-bottom: none; }
+  .crypto-card-name { color: rgba(0,255,247,0.6); }
+  .crypto-card-price { color: var(--cyan); font-weight: bold; }
+  .crypto-card-pct.up { color: #00ff88; }
+  .crypto-card-pct.down { color: var(--pink); }
+
   .typing {
     display: flex;
     align-items: center;
@@ -281,7 +359,6 @@
     50% { transform: translateY(-6px); opacity: 1; }
   }
 
-  /* INPUT AREA */
   .input-area {
     position: relative;
     z-index: 10;
@@ -321,10 +398,7 @@
     overflow-y: auto;
   }
 
-  .input-wrapper textarea::placeholder {
-    color: rgba(0,255,247,0.25);
-  }
-
+  .input-wrapper textarea::placeholder { color: rgba(0,255,247,0.25); }
   .input-wrapper textarea::-webkit-scrollbar { width: 2px; }
   .input-wrapper textarea::-webkit-scrollbar-thumb { background: var(--cyan); }
 
@@ -350,10 +424,7 @@
     box-shadow: 0 0 20px rgba(0,255,247,0.3);
   }
 
-  .send-btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-  }
+  .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
   .input-hint {
     font-size: 9px;
@@ -363,7 +434,6 @@
     padding: 0 2px;
   }
 
-  /* API Key setup */
   .setup-overlay {
     position: fixed;
     inset: 0;
@@ -434,10 +504,7 @@
     box-shadow: 0 0 20px rgba(0,255,247,0.1);
   }
 
-  .setup-btn:hover {
-    background: rgba(0,255,247,0.1);
-    box-shadow: 0 0 30px rgba(0,255,247,0.3);
-  }
+  .setup-btn:hover { background: rgba(0,255,247,0.1); box-shadow: 0 0 30px rgba(0,255,247,0.3); }
 
   .setup-divider {
     height: 1px;
@@ -445,7 +512,6 @@
     margin: 20px 0;
   }
 
-  /* Corner decorations for setup box */
   .setup-box::before {
     content: '◆ SYSTEM INIT ◆';
     display: block;
@@ -459,7 +525,6 @@
 </head>
 <body>
 
-<!-- API Key Setup -->
 <div class="setup-overlay" id="setupOverlay">
   <div class="setup-box">
     <h2>OBAN.AI</h2>
@@ -470,7 +535,6 @@
   </div>
 </div>
 
-<!-- Header -->
 <div class="header">
   <div class="header-logo">O</div>
   <div class="header-info">
@@ -478,28 +542,37 @@
     <div class="status">● ONLINE // READY</div>
   </div>
   <div class="header-decor">
-    <div>SYS v2.0.77</div>
-    <div style="color:rgba(255,230,0,0.5)">GROQ ENGINE</div>
+    <div>SYS v3.0.0</div>
+    <div style="color:rgba(255,230,0,0.5)">CRYPTO ENABLED</div>
   </div>
 </div>
 
-<!-- Chat Area -->
+<!-- Crypto Ticker -->
+<div class="crypto-ticker" id="cryptoTicker">
+  <div class="ticker-item" style="color:rgba(0,255,247,0.3)">⟳ LOADING MARKET DATA...</div>
+</div>
+
 <div class="chat-area" id="chatArea">
   <div class="welcome">
     <div class="welcome-title">OBAN</div>
-    <div class="welcome-sub">ARTIFICIAL INTELLIGENCE // PERSONAL UNIT</div>
+    <div class="welcome-sub">ARTIFICIAL INTELLIGENCE // CRYPTO ENABLED</div>
     <div class="welcome-line"></div>
     <div style="font-size:11px; color:rgba(0,255,247,0.4); letter-spacing:1px; line-height:1.8">
-      SISTEM AKTIF. SIAP MENERIMA INPUT.<br>
-      KETIK PESAN UNTUK MEMULAI.
+      SISTEM AKTIF. DATA CRYPTO REALTIME TERSEDIA.<br>
+      KETIK PESAN ATAU PILIH SHORTCUT DI BAWAH.
+    </div>
+    <div class="quick-btns">
+      <button class="quick-btn" onclick="quickAsk('Berikan harga bitcoin saat ini')">₿ HARGA BTC</button>
+      <button class="quick-btn" onclick="quickAsk('Berikan harga ethereum saat ini')">⬡ HARGA ETH</button>
+      <button class="quick-btn" onclick="quickAsk('Tampilkan harga top 5 crypto saat ini')">📊 TOP 5 CRYPTO</button>
+      <button class="quick-btn" onclick="quickAsk('Bagaimana kondisi pasar crypto hari ini?')">🌐 MARKET UPDATE</button>
     </div>
   </div>
 </div>
 
-<!-- Input Area -->
 <div class="input-area">
   <div class="input-wrapper">
-    <textarea id="messageInput" placeholder="Kirim pesan ke OBAN..." rows="1" 
+    <textarea id="messageInput" placeholder="Tanya OBAN tentang crypto atau apapun..." rows="1"
       onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
     <button class="send-btn" id="sendBtn" onclick="sendMessage()">▶</button>
   </div>
@@ -510,11 +583,9 @@
   let apiKey = localStorage.getItem('oban_api_key') || '';
   let isLoading = false;
   let conversationHistory = [];
+  let cryptoData = {};
 
-  // Check if API key exists
-  if (apiKey) {
-    document.getElementById('setupOverlay').style.display = 'none';
-  }
+  if (apiKey) document.getElementById('setupOverlay').style.display = 'none';
 
   function saveApiKey() {
     const key = document.getElementById('apiKeyInput').value.trim();
@@ -523,6 +594,73 @@
     localStorage.setItem('oban_api_key', key);
     document.getElementById('setupOverlay').style.display = 'none';
     document.getElementById('messageInput').focus();
+  }
+
+  // Fetch crypto prices from CoinGecko
+  async function fetchCryptoPrices() {
+    try {
+      const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,binancecoin,ripple,dogecoin,cardano,polkadot&vs_currencies=usd&include_24hr_change=true');
+      const data = await res.json();
+      cryptoData = data;
+      updateTicker(data);
+    } catch(e) {
+      console.log('Crypto fetch error:', e);
+    }
+  }
+
+  function updateTicker(data) {
+    const ticker = document.getElementById('cryptoTicker');
+    const coins = {
+      bitcoin: 'BTC',
+      ethereum: 'ETH',
+      solana: 'SOL',
+      binancecoin: 'BNB',
+      ripple: 'XRP',
+      dogecoin: 'DOGE',
+      cardano: 'ADA',
+      polkadot: 'DOT'
+    };
+
+    ticker.innerHTML = '';
+    for (const [id, symbol] of Object.entries(coins)) {
+      if (!data[id]) continue;
+      const price = data[id].usd;
+      const change = data[id].usd_24h_change;
+      const changeClass = change >= 0 ? 'up' : 'down';
+      const changeSign = change >= 0 ? '+' : '';
+      const priceStr = price >= 1 ? '$' + price.toLocaleString('en-US', {maximumFractionDigits: 2}) : '$' + price.toFixed(4);
+
+      ticker.innerHTML += `
+        <div class="ticker-item" onclick="quickAsk('Berikan info lengkap harga ${symbol} saat ini')">
+          <span class="ticker-name">${symbol}</span>
+          <span class="ticker-price">${priceStr}</span>
+          <span class="ticker-change ${changeClass}">${changeSign}${change.toFixed(2)}%</span>
+        </div>`;
+    }
+  }
+
+  function formatCryptoContext() {
+    if (Object.keys(cryptoData).length === 0) return '';
+    const coins = {
+      bitcoin: 'Bitcoin (BTC)',
+      ethereum: 'Ethereum (ETH)',
+      solana: 'Solana (SOL)',
+      binancecoin: 'BNB (BNB)',
+      ripple: 'XRP (XRP)',
+      dogecoin: 'Dogecoin (DOGE)',
+      cardano: 'Cardano (ADA)',
+      polkadot: 'Polkadot (DOT)'
+    };
+
+    let context = '\n\n[DATA CRYPTO REALTIME - ' + new Date().toLocaleString('id-ID') + ']\n';
+    for (const [id, name] of Object.entries(coins)) {
+      if (!cryptoData[id]) continue;
+      const price = cryptoData[id].usd;
+      const change = cryptoData[id].usd_24h_change;
+      const priceStr = price >= 1 ? '$' + price.toLocaleString('en-US', {maximumFractionDigits: 2}) : '$' + price.toFixed(4);
+      context += `${name}: ${priceStr} (24h: ${change >= 0 ? '+' : ''}${change.toFixed(2)}%)\n`;
+    }
+    return context;
   }
 
   function autoResize(el) {
@@ -535,6 +673,11 @@
       e.preventDefault();
       sendMessage();
     }
+  }
+
+  function quickAsk(text) {
+    document.getElementById('messageInput').value = text;
+    sendMessage();
   }
 
   function addMessage(role, text) {
@@ -594,7 +737,17 @@
     document.getElementById('sendBtn').disabled = true;
 
     addMessage('user', text);
-    conversationHistory.push({ role: 'user', content: text });
+
+    // Add crypto context if question is about crypto
+    const cryptoKeywords = ['bitcoin', 'btc', 'ethereum', 'eth', 'crypto', 'harga', 'coin', 'token', 'sol', 'bnb', 'xrp', 'doge', 'ada', 'dot', 'solana', 'market', 'pasar'];
+    const isCryptoQuestion = cryptoKeywords.some(k => text.toLowerCase().includes(k));
+
+    let messageContent = text;
+    if (isCryptoQuestion) {
+      messageContent += formatCryptoContext();
+    }
+
+    conversationHistory.push({ role: 'user', content: messageContent });
     showTyping();
 
     try {
@@ -606,7 +759,13 @@
         },
         body: JSON.stringify({
           model: 'llama-3.3-70b-versatile',
-          messages: conversationHistory,
+          messages: [
+            {
+              role: 'system',
+              content: 'Kamu adalah OBAN, asisten AI pribadi yang cerdas. Jawab dalam bahasa Indonesia. Jika ada data crypto realtime dalam pesan, gunakan data tersebut untuk menjawab pertanyaan tentang harga cryptocurrency dengan akurat.'
+            },
+            ...conversationHistory
+          ],
           max_tokens: 1024
         })
       });
@@ -631,7 +790,10 @@
     input.focus();
   }
 
-  // Focus input on load
+  // Load crypto prices on start and refresh every 60 seconds
+  fetchCryptoPrices();
+  setInterval(fetchCryptoPrices, 60000);
+
   setTimeout(() => {
     if (apiKey) document.getElementById('messageInput').focus();
     else document.getElementById('apiKeyInput').focus();
