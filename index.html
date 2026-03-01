@@ -11,6 +11,7 @@
   --cyan: #00fff7;
   --pink: #ff006e;
   --green: #00ff88;
+  --yellow: #ffe600;
   --bg: #050a0e;
   --bg2: #0a1628;
   --glass: rgba(0,255,247,0.04);
@@ -30,60 +31,24 @@ body { display: flex; flex-direction: column; }
 @keyframes slideRight { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
 @keyframes slideInLeft { from { transform: translateX(-100%); } to { transform: translateX(0); } }
 @keyframes typingDot { 0%,100% { transform: translateY(0); opacity: 0.3; } 50% { transform: translateY(-5px); opacity: 1; } }
+@keyframes imgLoad { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
 /* SIDEBAR */
 .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 50; display: none; }
 .sidebar-overlay.on { display: block; }
-.sidebar {
-  position: fixed; top: 0; left: 0; bottom: 0; width: 260px;
-  background: var(--bg2);
-  border-right: 1px solid var(--border);
-  z-index: 60;
-  display: flex; flex-direction: column;
-  transform: translateX(-100%);
-  transition: transform 0.25s ease;
-}
+.sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 260px; background: var(--bg2); border-right: 1px solid var(--border); z-index: 60; display: flex; flex-direction: column; transform: translateX(-100%); transition: transform 0.25s ease; }
 .sidebar.on { transform: translateX(0); }
-.sidebar-header {
-  padding: 16px 14px;
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between;
-}
+.sidebar-header { padding: 16px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
 .sidebar-title { font-family: 'Orbitron', monospace; font-size: 13px; letter-spacing: 3px; color: var(--cyan); }
 .sidebar-close { background: none; border: none; color: rgba(0,255,247,0.4); font-size: 18px; cursor: pointer; padding: 0; }
 .sidebar-close:active { color: var(--cyan); }
-
-.new-chat-btn {
-  margin: 12px;
-  padding: 10px;
-  background: transparent;
-  border: 1px solid var(--cyan);
-  color: var(--cyan);
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 11px; letter-spacing: 2px;
-  cursor: pointer;
-  border-radius: 2px;
-  transition: background 0.2s;
-  touch-action: manipulation;
-}
+.new-chat-btn { margin: 12px; padding: 10px; background: transparent; border: 1px solid var(--cyan); color: var(--cyan); font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: 2px; cursor: pointer; border-radius: 2px; transition: background 0.2s; touch-action: manipulation; }
 .new-chat-btn:active { background: rgba(0,255,247,0.1); }
-
 .chat-list { flex: 1; overflow-y: auto; padding: 0 8px 12px; }
 .chat-list::-webkit-scrollbar { width: 2px; }
 .chat-list::-webkit-scrollbar-thumb { background: rgba(0,255,247,0.2); }
-
 .chat-list-label { font-size: 9px; color: rgba(0,255,247,0.3); letter-spacing: 2px; padding: 10px 6px 6px; }
-
-.chat-item {
-  padding: 10px 10px;
-  border-radius: 2px;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 8px;
-  border: 1px solid transparent;
-  margin-bottom: 3px;
-  transition: all 0.15s;
-}
+.chat-item { padding: 10px; border-radius: 2px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; border: 1px solid transparent; margin-bottom: 3px; transition: all 0.15s; }
 .chat-item:active, .chat-item.active { background: var(--glass); border-color: var(--border); }
 .chat-item-title { font-size: 11px; color: rgba(0,255,247,0.7); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
 .chat-item.active .chat-item-title { color: var(--cyan); }
@@ -91,14 +56,7 @@ body { display: flex; flex-direction: column; }
 .chat-item-del:active { color: var(--pink); }
 
 /* HEADER */
-.header {
-  position: relative; z-index: 10;
-  display: flex; align-items: center; gap: 10px;
-  padding: 11px 16px;
-  border-bottom: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(0,255,247,0.05), transparent);
-  flex-shrink: 0;
-}
+.header { position: relative; z-index: 10; display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(0,255,247,0.05), transparent); flex-shrink: 0; }
 .menu-btn { background: none; border: none; color: rgba(0,255,247,0.5); font-size: 18px; cursor: pointer; padding: 0; flex-shrink: 0; touch-action: manipulation; }
 .menu-btn:active { color: var(--cyan); }
 .header-title { font-family: 'Orbitron', monospace; font-size: 18px; font-weight: 900; letter-spacing: 5px; color: var(--cyan); text-shadow: 0 0 20px var(--cyan); flex: 1; text-align: center; }
@@ -108,7 +66,7 @@ body { display: flex; flex-direction: column; }
 /* TICKER */
 .ticker { position: relative; z-index: 10; display: flex; gap: 18px; padding: 5px 16px; border-bottom: 1px solid var(--border); background: rgba(0,255,247,0.02); overflow-x: auto; flex-shrink: 0; }
 .ticker::-webkit-scrollbar { display: none; }
-.ticker-item { display: flex; align-items: center; gap: 5px; white-space: nowrap; cursor: pointer; font-size: 11px; }
+.ticker-item { display: flex; align-items: center; gap: 5px; white-space: nowrap; font-size: 11px; }
 .t-name { color: rgba(0,255,247,0.45); }
 .t-price { color: var(--cyan); font-weight: bold; }
 .t-up { color: var(--green); }
@@ -132,6 +90,12 @@ body { display: flex; flex-direction: column; }
 .msg-bubble { padding: 4px 3px; font-size: 13px; line-height: 1.75; white-space: pre-wrap; word-break: break-word; background: transparent; border: none; }
 .msg.ai .msg-bubble { color: rgba(0,255,247,0.88); }
 .msg.user .msg-bubble { color: rgba(255,200,215,0.88); }
+
+/* Image message */
+.msg-image { max-width: 100%; border-radius: 4px; border: 1px solid var(--border); animation: imgLoad 0.4s ease; margin-top: 4px; display: block; }
+.img-actions { display: flex; gap: 8px; margin-top: 6px; }
+.img-action-btn { background: transparent; border: 1px solid rgba(0,255,247,0.25); color: rgba(0,255,247,0.6); font-family: 'Share Tech Mono', monospace; font-size: 10px; padding: 4px 10px; border-radius: 2px; cursor: pointer; touch-action: manipulation; }
+.img-action-btn:active { background: rgba(0,255,247,0.1); color: var(--cyan); }
 
 .typing-wrap { display: flex; flex-direction: column; gap: 3px; align-self: flex-start; }
 .typing-label { font-size: 9px; letter-spacing: 2px; color: rgba(0,255,247,0.35); padding: 0 3px; }
@@ -196,8 +160,8 @@ body { display: flex; flex-direction: column; }
 <!-- HEADER -->
 <div class="header">
   <button class="menu-btn" id="menuBtn">☰</button>
-  <div class="header-title">OBAN 4.1</div>
-  <button class="newchat-btn" id="newChatBtn" title="Chat Baru">✏</button>
+  <div class="header-title">OBAN</div>
+  <button class="newchat-btn" id="newChatBtn">✏</button>
 </div>
 
 <!-- TICKER -->
@@ -210,7 +174,7 @@ body { display: flex; flex-direction: column; }
   <div class="welcome-center" id="welcomeMsg">
     <div>
       <div style="font-family:'Orbitron',monospace;font-size:14px;color:var(--cyan);letter-spacing:2px;margin-bottom:10px;">HELO, SAYA OBAN</div>
-      <div style="font-size:12px;color:rgba(0,255,247,0.4);letter-spacing:1px;line-height:1.8;">Tanyakan apa saja kepada saya</div>
+      <div style="font-size:11px;color:rgba(0,255,247,0.35);letter-spacing:1px;line-height:1.9;">Tanyakan apa saja kepada saya<br><span style="color:rgba(0,255,247,0.2);">💡 Ketik "buatkan gambar ..." untuk generate gambar</span></div>
     </div>
   </div>
 </div>
@@ -218,7 +182,7 @@ body { display: flex; flex-direction: column; }
 <!-- INPUT -->
 <div class="input-area">
   <div class="input-row">
-    <textarea id="msgInput" placeholder="Ketik pesan..." rows="1"></textarea>
+    <textarea id="msgInput" placeholder="Ketik pesan atau 'buatkan gambar ...'" rows="1"></textarea>
     <button class="btn-send" id="sendBtn">▶</button>
   </div>
   <div class="input-hint">ENTER = KIRIM &nbsp;|&nbsp; SHIFT+ENTER = BARIS BARU</div>
@@ -226,28 +190,26 @@ body { display: flex; flex-direction: column; }
 
 <script>
 (function() {
-  // ── STATE ──
   let apiKey = localStorage.getItem('oban_key') || '';
   let busy = false;
   let currentId = null;
   let sessions = JSON.parse(localStorage.getItem('oban_sessions') || '{}');
   let history = [];
 
-  // ── ELEMENTS ──
-  const setupEl     = document.getElementById('setup');
-  const setupBtn    = document.getElementById('setupBtn');
-  const keyInput    = document.getElementById('keyInput');
-  const chatEl      = document.getElementById('chat');
-  const msgInput    = document.getElementById('msgInput');
-  const sendBtn     = document.getElementById('sendBtn');
-  const ticker      = document.getElementById('ticker');
-  const sidebar     = document.getElementById('sidebar');
-  const sidebarOvl  = document.getElementById('sidebarOverlay');
-  const sidebarClose= document.getElementById('sidebarClose');
-  const menuBtn     = document.getElementById('menuBtn');
-  const newChatBtn  = document.getElementById('newChatBtn');
-  const newChatSB   = document.getElementById('newChatSidebar');
-  const chatList    = document.getElementById('chatList');
+  const setupEl    = document.getElementById('setup');
+  const setupBtn   = document.getElementById('setupBtn');
+  const keyInput   = document.getElementById('keyInput');
+  const chatEl     = document.getElementById('chat');
+  const msgInput   = document.getElementById('msgInput');
+  const sendBtn    = document.getElementById('sendBtn');
+  const ticker     = document.getElementById('ticker');
+  const sidebar    = document.getElementById('sidebar');
+  const sidebarOvl = document.getElementById('sidebarOverlay');
+  const sidebarClose = document.getElementById('sidebarClose');
+  const menuBtn    = document.getElementById('menuBtn');
+  const newChatBtn = document.getElementById('newChatBtn');
+  const newChatSB  = document.getElementById('newChatSidebar');
+  const chatList   = document.getElementById('chatList');
 
   if (apiKey) setupEl.style.display = 'none';
 
@@ -267,31 +229,21 @@ body { display: flex; flex-direction: column; }
   sidebarClose.addEventListener('click', closeSidebar);
   sidebarOvl.addEventListener('click', closeSidebar);
 
-  function openSidebar() {
-    sidebar.classList.add('on');
-    sidebarOvl.classList.add('on');
-    renderChatList();
-  }
-  function closeSidebar() {
-    sidebar.classList.remove('on');
-    sidebarOvl.classList.remove('on');
-  }
+  function openSidebar() { sidebar.classList.add('on'); sidebarOvl.classList.add('on'); renderChatList(); }
+  function closeSidebar() { sidebar.classList.remove('on'); sidebarOvl.classList.remove('on'); }
 
   // ── SESSIONS ──
-  function saveSessions() {
-    localStorage.setItem('oban_sessions', JSON.stringify(sessions));
-  }
+  function saveSessions() { localStorage.setItem('oban_sessions', JSON.stringify(sessions)); }
 
   function newChat() {
     currentId = Date.now().toString();
     history = [];
     sessions[currentId] = { title: 'Chat Baru', messages: [] };
     saveSessions();
-    chatEl.innerHTML = '';
     chatEl.innerHTML = `<div class="welcome-center" id="welcomeMsg">
       <div>
         <div style="font-family:'Orbitron',monospace;font-size:14px;color:var(--cyan);letter-spacing:2px;margin-bottom:10px;">HELO, SAYA OBAN</div>
-        <div style="font-size:12px;color:rgba(0,255,247,0.4);letter-spacing:1px;line-height:1.8;">Tanyakan apa saja kepada saya</div>
+        <div style="font-size:11px;color:rgba(0,255,247,0.35);letter-spacing:1px;line-height:1.9;">Tanyakan apa saja kepada saya<br><span style="color:rgba(0,255,247,0.2);">💡 Ketik "buatkan gambar ..." untuk generate gambar</span></div>
       </div>
     </div>`;
     closeSidebar();
@@ -302,9 +254,12 @@ body { display: flex; flex-direction: column; }
     currentId = id;
     const s = sessions[id];
     if (!s) return;
-    history = s.messages.map(m => ({ role: m.role, content: m.content }));
+    history = s.messages.filter(m => m.role !== 'image').map(m => ({ role: m.role, content: m.content }));
     chatEl.innerHTML = '';
-    s.messages.forEach(m => addMsg(m.role === 'user' ? 'user' : 'ai', m.display || m.content, false));
+    s.messages.forEach(m => {
+      if (m.role === 'image') addImageMsg(m.url, m.prompt, false);
+      else addMsg(m.role === 'user' ? 'user' : 'ai', m.content, false);
+    });
     chatEl.scrollTop = chatEl.scrollHeight;
     closeSidebar();
   }
@@ -330,10 +285,7 @@ body { display: flex; flex-direction: column; }
       item.className = 'chat-item' + (id === currentId ? ' active' : '');
       item.innerHTML = `<span class="chat-item-title">${s.title}</span><button class="chat-item-del" data-id="${id}">✕</button>`;
       item.addEventListener('click', function(e) {
-        if (e.target.classList.contains('chat-item-del')) {
-          deleteChat(e.target.dataset.id);
-          return;
-        }
+        if (e.target.classList.contains('chat-item-del')) { deleteChat(e.target.dataset.id); return; }
         loadChat(id);
       });
       chatList.appendChild(item);
@@ -401,10 +353,7 @@ body { display: flex; flex-direction: column; }
     if (!Object.keys(valid).length) {
       for (const w of words.slice(0,2)) {
         const id = await searchCoin(w);
-        if (id) {
-          const d = await fetchPrices([id]);
-          if (d[id] && d[id].usd) { valid[id] = d[id]; break; }
-        }
+        if (id) { const d = await fetchPrices([id]); if (d[id] && d[id].usd) { valid[id] = d[id]; break; } }
       }
     }
     if (!Object.keys(valid).length) return '';
@@ -423,7 +372,86 @@ body { display: flex; flex-direction: column; }
     return kw.some(k => text.toLowerCase().includes(k));
   }
 
-  // ── UI ──
+  // ── IMAGE GENERATION ──
+  function isImageRequest(text) {
+    const kw = ['buatkan gambar','buat gambar','generate gambar','gambarkan','buatkan foto','buat foto','create image','generate image','buatin gambar'];
+    return kw.some(k => text.toLowerCase().includes(k));
+  }
+
+  function extractImagePrompt(text) {
+    const patterns = [
+      /buatkan gambar(?: dari| tentang| dengan)?\s+(.+)/i,
+      /buat gambar(?: dari| tentang| dengan)?\s+(.+)/i,
+      /generate gambar(?: dari| tentang| dengan)?\s+(.+)/i,
+      /gambarkan\s+(.+)/i,
+      /buatkan foto(?: dari| tentang| dengan)?\s+(.+)/i,
+      /buat foto(?: dari| tentang| dengan)?\s+(.+)/i,
+      /buatin gambar(?: dari| tentang| dengan)?\s+(.+)/i,
+      /create image of\s+(.+)/i,
+      /generate image of\s+(.+)/i,
+    ];
+    for (const p of patterns) {
+      const m = text.match(p);
+      if (m && m[1]) return m[1].trim();
+    }
+    return text;
+  }
+
+  function addImageMsg(url, prompt, save = true) {
+    const wm = document.getElementById('welcomeMsg');
+    if (wm) wm.remove();
+
+    const wrap = document.createElement('div');
+    wrap.className = 'msg ai';
+    const lbl = document.createElement('div');
+    lbl.className = 'msg-label';
+    lbl.textContent = '◆ OBAN';
+
+    const img = document.createElement('img');
+    img.className = 'msg-image';
+    img.alt = prompt;
+    img.style.maxWidth = '260px';
+
+    // Loading placeholder
+    const loadingDiv = document.createElement('div');
+    loadingDiv.style.cssText = 'font-size:11px;color:rgba(0,255,247,0.4);padding:4px 3px;';
+    loadingDiv.textContent = '⟳ Generating image...';
+    wrap.appendChild(lbl);
+    wrap.appendChild(loadingDiv);
+    chatEl.appendChild(wrap);
+    chatEl.scrollTop = chatEl.scrollHeight;
+
+    img.onload = function() {
+      loadingDiv.remove();
+      wrap.appendChild(img);
+
+      // Download button
+      const actions = document.createElement('div');
+      actions.className = 'img-actions';
+      const dlBtn = document.createElement('a');
+      dlBtn.href = url;
+      dlBtn.download = 'oban-image.jpg';
+      dlBtn.target = '_blank';
+      dlBtn.className = 'img-action-btn';
+      dlBtn.textContent = '⬇ Download';
+      actions.appendChild(dlBtn);
+      wrap.appendChild(actions);
+      chatEl.scrollTop = chatEl.scrollHeight;
+    };
+
+    img.onerror = function() {
+      loadingDiv.textContent = '⚠ Gagal generate gambar, coba lagi.';
+    };
+
+    img.src = url;
+
+    if (save && currentId && sessions[currentId]) {
+      sessions[currentId].messages.push({ role: 'image', url, prompt });
+      saveSessions();
+    }
+  }
+
+  // ── UI HELPERS ──
   function addMsg(role, text, save = true) {
     const wm = document.getElementById('welcomeMsg');
     if (wm) wm.remove();
@@ -441,12 +469,10 @@ body { display: flex; flex-direction: column; }
     chatEl.appendChild(wrap);
     chatEl.scrollTop = chatEl.scrollHeight;
 
-    // Save to session
     if (save && currentId && sessions[currentId]) {
-      sessions[currentId].messages.push({ role: role === 'ai' ? 'assistant' : 'user', content: text, display: text });
-      // Update title from first user message
+      sessions[currentId].messages.push({ role: role === 'ai' ? 'assistant' : 'user', content: text });
       if (role === 'user' && sessions[currentId].messages.filter(m => m.role === 'user').length === 1) {
-        sessions[currentId].title = text.slice(0, 30) + (text.length > 30 ? '...' : '');
+        sessions[currentId].title = text.slice(0,30) + (text.length > 30 ? '...' : '');
       }
       saveSessions();
     }
@@ -461,28 +487,19 @@ body { display: flex; flex-direction: column; }
     const dots = document.createElement('div');
     dots.className = 'typing-dots';
     dots.innerHTML = '<span></span><span></span><span></span>';
-    if (hint) {
-      const h = document.createElement('span');
-      h.className = 'typing-hint'; h.textContent = hint;
-      dots.appendChild(h);
-    }
+    if (hint) { const h = document.createElement('span'); h.className = 'typing-hint'; h.textContent = hint; dots.appendChild(h); }
     wrap.appendChild(lbl); wrap.appendChild(dots);
     chatEl.appendChild(wrap);
     chatEl.scrollTop = chatEl.scrollHeight;
   }
 
-  function removeTyping() {
-    const el = document.getElementById('typing');
-    if (el) el.remove();
-  }
+  function removeTyping() { const el = document.getElementById('typing'); if (el) el.remove(); }
 
-  // ── SEND ──
+  // ── MAIN SEND ──
   async function doSend() {
     if (busy) return;
     const text = msgInput.value.trim();
     if (!text) return;
-
-    // Create new session if none
     if (!currentId) newChat();
 
     msgInput.value = '';
@@ -492,6 +509,20 @@ body { display: flex; flex-direction: column; }
 
     addMsg('user', text);
 
+    // ── IMAGE GENERATION ──
+    if (isImageRequest(text)) {
+      const prompt = extractImagePrompt(text);
+      showTyping('GENERATING IMAGE...');
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt + ', high quality, detailed, cyberpunk style')}?width=512&height=512&nologo=true`;
+      removeTyping();
+      addImageMsg(imageUrl, prompt);
+      busy = false;
+      sendBtn.disabled = false;
+      msgInput.focus();
+      return;
+    }
+
+    // ── CRYPTO ──
     let ctx = '';
     if (isCryptoQ(text)) {
       showTyping('FETCHING CRYPTO DATA...');
@@ -529,6 +560,7 @@ ATURAN:
 - Jika ditanya prediksi harga, berikan analisis berdasarkan data yang ada dengan disclaimer
 - Jika tidak tahu sesuatu, katakan dengan jujur
 - Jawab singkat untuk pertanyaan singkat, jawab detail untuk pertanyaan kompleks
+- Kamu juga bisa generate gambar, tapi itu sudah dihandle otomatis oleh sistem
 - Tanggal dan waktu sekarang: ${new Date().toLocaleString('id-ID', {weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'})}` },
             ...history
           ]
