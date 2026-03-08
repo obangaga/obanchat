@@ -177,7 +177,7 @@ body { display: flex; flex-direction: column; }
     <div class="setup-div"></div>
     <input type="text" id="keyInput" placeholder="gsk_xxxxxxxxxxxxxxxx" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
     <div class="setup-error" id="setupError"></div>
-    <button class="setup-go" id="setupBtn" onclick="doSetup()">▶ INISIALISASI SISTEM</button>
+    <button class="setup-go" id="setupBtn">▶ INISIALISASI SISTEM</button>
   </div>
 </div>
 
@@ -276,7 +276,7 @@ body { display: flex; flex-direction: column; }
   if (apiKey) setupEl.style.display = 'none';
 
   // ── SETUP ──
-  window.doSetup = function() {
+  function doSetup() {
     const k = keyInput.value.trim();
     const errEl = document.getElementById('setupError');
     if (!k) {
@@ -284,7 +284,7 @@ body { display: flex; flex-direction: column; }
       return;
     }
     if (!k.startsWith('gsk_')) {
-      errEl.textContent = '⚠ API key harus dimulai dengan gsk_';
+      errEl.textContent = '⚠ Harus dimulai dengan gsk_';
       return;
     }
     errEl.textContent = '';
@@ -292,8 +292,10 @@ body { display: flex; flex-direction: column; }
     localStorage.setItem('oban_key', k);
     setupEl.style.display = 'none';
     msgInput.focus();
-  };
-  keyInput.addEventListener('keydown', e => { if (e.key === 'Enter') window.doSetup(); });
+  }
+  setupBtn.addEventListener('click', doSetup);
+  setupBtn.addEventListener('touchend', function(e) { e.preventDefault(); doSetup(); });
+  keyInput.addEventListener('keydown', e => { if (e.key === 'Enter') doSetup(); });
 
   // ── TABS ──
   window.switchTab = function(tab) {
