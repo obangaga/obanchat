@@ -8,7 +8,7 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 :root {
-  --cyan: #00fff7; --pink: #ff006e; --green: #00ff88;
+  --cyan: #00fff7; --pink: #ff006e; --green: #00ff88; --orange: #ff8c00;
   --bg: #050a0e; --bg2: #0a1628;
   --glass: rgba(0,255,247,0.04); --border: rgba(0,255,247,0.12);
 }
@@ -23,7 +23,10 @@ body { display: flex; flex-direction: column; }
 @keyframes slideLeft { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
 @keyframes slideRight { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
 @keyframes typingDot { 0%,100% { transform: translateY(0); opacity: 0.3; } 50% { transform: translateY(-5px); opacity: 1; } }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes hotPulse { 0%,100% { border-color: rgba(255,140,0,0.25); } 50% { border-color: rgba(255,140,0,0.6); } }
 
+/* SIDEBAR */
 .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 50; display: none; }
 .sidebar-overlay.on { display: block; }
 .sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 260px; background: var(--bg2); border-right: 1px solid var(--border); z-index: 60; display: flex; flex-direction: column; transform: translateX(-100%); transition: transform 0.25s ease; }
@@ -45,6 +48,7 @@ body { display: flex; flex-direction: column; }
 .chat-item-del { background: none; border: none; color: rgba(255,0,110,0.3); font-size: 13px; cursor: pointer; padding: 0; flex-shrink: 0; }
 .chat-item-del:active { color: var(--pink); }
 
+/* HEADER */
 .header { position: relative; z-index: 10; display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(0,255,247,0.05), transparent); flex-shrink: 0; }
 .menu-btn { background: none; border: none; color: rgba(0,255,247,0.5); font-size: 18px; cursor: pointer; padding: 0; flex-shrink: 0; touch-action: manipulation; }
 .menu-btn:active { color: var(--cyan); }
@@ -52,6 +56,7 @@ body { display: flex; flex-direction: column; }
 .newchat-btn { background: none; border: 1px solid rgba(0,255,247,0.25); color: rgba(0,255,247,0.5); font-size: 16px; cursor: pointer; padding: 4px 8px; border-radius: 2px; flex-shrink: 0; touch-action: manipulation; }
 .newchat-btn:active { border-color: var(--cyan); color: var(--cyan); }
 
+/* TICKER */
 .ticker { position: relative; z-index: 10; display: flex; gap: 18px; padding: 5px 16px; border-bottom: 1px solid var(--border); background: rgba(0,255,247,0.02); overflow-x: auto; flex-shrink: 0; }
 .ticker::-webkit-scrollbar { display: none; }
 .ticker-item { display: flex; align-items: center; gap: 5px; white-space: nowrap; font-size: 11px; }
@@ -60,9 +65,20 @@ body { display: flex; flex-direction: column; }
 .t-up { color: var(--green); }
 .t-down { color: var(--pink); }
 
-.chat { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 16px; display: flex; flex-direction: column; gap: 14px; position: relative; z-index: 10; -webkit-overflow-scrolling: touch; }
-.chat::-webkit-scrollbar { width: 3px; }
-.chat::-webkit-scrollbar-thumb { background: rgba(0,255,247,0.2); border-radius: 2px; }
+/* TABS */
+.tabs { position: relative; z-index: 10; display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; background: rgba(0,0,0,0.2); }
+.tab { flex: 1; padding: 9px 4px; text-align: center; font-size: 10px; letter-spacing: 1px; color: rgba(0,255,247,0.3); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; touch-action: manipulation; }
+.tab.active { color: var(--cyan); border-bottom-color: var(--cyan); background: rgba(0,255,247,0.03); }
+.tab.tab-trend.active { color: var(--orange); border-bottom-color: var(--orange); background: rgba(255,140,0,0.03); }
+
+/* PANELS */
+.panel { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; display: none; }
+.panel.active { display: flex; flex-direction: column; }
+.panel::-webkit-scrollbar { width: 3px; }
+.panel::-webkit-scrollbar-thumb { background: rgba(0,255,247,0.2); border-radius: 2px; }
+
+/* CHAT */
+.chat-inner { padding: 16px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
 .welcome-center { flex: 1; display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px; }
 .msg { display: flex; flex-direction: column; gap: 3px; max-width: 86%; }
 .msg.ai { align-self: flex-start; animation: slideLeft 0.25s ease; }
@@ -73,7 +89,6 @@ body { display: flex; flex-direction: column; }
 .msg-bubble { padding: 4px 3px; font-size: 13px; line-height: 1.75; white-space: pre-wrap; word-break: break-word; background: transparent; border: none; }
 .msg.ai .msg-bubble { color: rgba(0,255,247,0.88); }
 .msg.user .msg-bubble { color: rgba(255,200,215,0.88); }
-
 .typing-wrap { display: flex; flex-direction: column; gap: 3px; align-self: flex-start; }
 .typing-label { font-size: 9px; letter-spacing: 2px; color: rgba(0,255,247,0.35); padding: 0 3px; }
 .typing-dots { display: flex; align-items: center; gap: 7px; padding: 8px 4px; }
@@ -82,6 +97,49 @@ body { display: flex; flex-direction: column; }
 .typing-dots span:nth-child(3) { animation-delay: 0.36s; }
 .typing-hint { font-size: 9px; color: rgba(0,255,247,0.3); margin-left: 8px; }
 
+/* TRENDING */
+.trend-topbar { padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,140,0,0.1); flex-shrink: 0; }
+.trend-topbar-left { font-size: 9px; color: rgba(255,140,0,0.5); letter-spacing: 2px; }
+.trend-update { font-size: 9px; color: rgba(255,140,0,0.25); margin-top: 2px; }
+.trend-refresh-btn { background: none; border: 1px solid rgba(255,140,0,0.25); color: rgba(255,140,0,0.5); font-size: 11px; cursor: pointer; padding: 5px 10px; border-radius: 2px; font-family: 'Share Tech Mono', monospace; letter-spacing: 1px; touch-action: manipulation; }
+.trend-refresh-btn:active { background: rgba(255,140,0,0.08); color: var(--orange); }
+.trend-refresh-btn.loading { opacity: 0.5; pointer-events: none; }
+
+.trend-cards { padding: 10px 12px 20px; display: flex; flex-direction: column; gap: 10px; }
+
+.trend-card { border: 1px solid rgba(255,140,0,0.15); border-radius: 3px; padding: 12px; background: rgba(255,140,0,0.03); position: relative; animation: fadeUp 0.3s ease; }
+.trend-card.rank1 { border-color: rgba(255,140,0,0.4); background: rgba(255,140,0,0.05); animation: hotPulse 2s ease-in-out infinite; }
+.trend-card.rank2 { border-color: rgba(255,140,0,0.25); }
+
+.tc-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; }
+.tc-rank { font-family: 'Orbitron', monospace; font-size: 22px; font-weight: 900; color: rgba(255,140,0,0.12); line-height: 1; }
+.tc-rank.r1 { color: rgba(255,140,0,0.35); }
+.tc-badges { display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end; }
+.tc-badge { font-size: 8px; padding: 2px 6px; border-radius: 2px; letter-spacing: 1px; }
+.tc-badge.hot { background: rgba(255,50,0,0.12); border: 1px solid rgba(255,50,0,0.35); color: #ff4500; }
+.tc-badge.up { background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.25); color: var(--green); }
+.tc-badge.new { background: rgba(0,255,247,0.06); border: 1px solid rgba(0,255,247,0.2); color: var(--cyan); }
+.tc-badge.warn { background: rgba(255,0,110,0.08); border: 1px solid rgba(255,0,110,0.2); color: var(--pink); }
+
+.tc-name { font-family: 'Orbitron', monospace; font-size: 14px; font-weight: 700; color: var(--orange); margin-bottom: 2px; }
+.tc-addr { font-size: 9px; color: rgba(255,140,0,0.3); margin-bottom: 8px; word-break: break-all; }
+
+.tc-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 8px; }
+.tc-stat { background: rgba(0,0,0,0.2); padding: 5px 8px; border-radius: 2px; }
+.tc-stat-label { font-size: 8px; color: rgba(255,140,0,0.35); letter-spacing: 1px; margin-bottom: 2px; }
+.tc-stat-val { font-size: 11px; color: rgba(255,140,0,0.8); font-weight: bold; }
+.tc-stat-val.up { color: var(--green); }
+.tc-stat-val.down { color: var(--pink); }
+
+.tc-ai { border-top: 1px solid rgba(0,255,247,0.08); padding-top: 8px; margin-top: 4px; }
+.tc-ai-label { font-size: 8px; color: rgba(0,255,247,0.25); letter-spacing: 2px; margin-bottom: 4px; }
+.tc-ai-text { font-size: 11px; color: rgba(0,255,247,0.6); line-height: 1.65; }
+
+.trend-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 50px 20px; gap: 14px; }
+.trend-loading-spinner { font-size: 28px; animation: spin 1.2s linear infinite; color: rgba(255,140,0,0.5); }
+.trend-loading-text { font-size: 10px; color: rgba(255,140,0,0.35); letter-spacing: 2px; }
+
+/* INPUT */
 .input-area { position: relative; z-index: 10; padding: 10px 14px 14px; border-top: 1px solid var(--border); background: linear-gradient(0deg, rgba(0,255,247,0.03), transparent); flex-shrink: 0; }
 .input-row { display: flex; align-items: flex-end; gap: 8px; background: var(--glass); border: 1px solid var(--border); border-radius: 3px; padding: 9px 11px; transition: border-color 0.25s; }
 .input-row:focus-within { border-color: rgba(0,255,247,0.45); }
@@ -92,6 +150,7 @@ body { display: flex; flex-direction: column; }
 .btn-send:disabled { opacity: 0.3; pointer-events: none; }
 .input-hint { font-size: 9px; color: rgba(0,255,247,0.18); letter-spacing: 0.8px; margin-top: 5px; }
 
+/* SETUP */
 .setup { position: fixed; inset: 0; background: rgba(5,10,14,0.97); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
 .setup-box { width: 100%; max-width: 340px; border: 1px solid var(--cyan); background: var(--bg2); padding: 28px 22px; box-shadow: 0 0 40px rgba(0,255,247,0.08); animation: fadeUp 0.4s ease; }
 .setup-tag { font-size: 9px; color: var(--pink); letter-spacing: 3px; margin-bottom: 14px; animation: blink 2s step-end infinite; }
@@ -140,16 +199,43 @@ body { display: flex; flex-direction: column; }
   <div style="color:rgba(0,255,247,0.25);font-size:10px;">⟳ LOADING...</div>
 </div>
 
-<div class="chat" id="chat">
-  <div class="welcome-center" id="welcomeMsg">
-    <div>
-      <div style="font-family:'Orbitron',monospace;font-size:14px;color:var(--cyan);letter-spacing:2px;margin-bottom:10px;">HELO, SAYA OBAN</div>
-      <div style="font-size:12px;color:rgba(0,255,247,0.4);letter-spacing:1px;line-height:1.8;">Tanyakan apa saja kepada saya</div>
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" id="tab-chat" onclick="switchTab('chat')">◆ CHAT</div>
+  <div class="tab tab-trend" id="tab-trend" onclick="switchTab('trend')">🔥 TRENDING SOL</div>
+</div>
+
+<!-- CHAT PANEL -->
+<div class="panel active" id="panel-chat">
+  <div class="chat-inner" id="chat">
+    <div class="welcome-center" id="welcomeMsg">
+      <div>
+        <div style="font-family:'Orbitron',monospace;font-size:14px;color:var(--cyan);letter-spacing:2px;margin-bottom:10px;">HELO, SAYA OBAN</div>
+        <div style="font-size:12px;color:rgba(0,255,247,0.4);letter-spacing:1px;line-height:1.8;">Tanyakan apa saja kepada saya<br><span style="color:rgba(255,140,0,0.35);font-size:11px;">🔥 Cek tab Trending Meme Solana</span></div>
+      </div>
     </div>
   </div>
 </div>
 
-<div class="input-area">
+<!-- TRENDING PANEL -->
+<div class="panel" id="panel-trend">
+  <div class="trend-topbar">
+    <div>
+      <div class="trend-topbar-left">🔥 TOP TRENDING MEME · SOLANA</div>
+      <div class="trend-update" id="trendUpdate">Ketuk refresh untuk load data</div>
+    </div>
+    <button class="trend-refresh-btn" id="trendRefreshBtn" onclick="loadTrending()">⟳ REFRESH</button>
+  </div>
+  <div class="trend-cards" id="trendCards">
+    <div class="trend-loading">
+      <div class="trend-loading-spinner">⟳</div>
+      <div class="trend-loading-text">TEKAN REFRESH UNTUK LOAD</div>
+    </div>
+  </div>
+</div>
+
+<!-- INPUT (hanya untuk chat) -->
+<div class="input-area" id="inputArea">
   <div class="input-row">
     <textarea id="msgInput" placeholder="Ketik pesan..." rows="1"></textarea>
     <button class="btn-send" id="sendBtn">▶</button>
@@ -164,6 +250,7 @@ body { display: flex; flex-direction: column; }
   let currentId = null;
   let sessions = JSON.parse(localStorage.getItem('oban_sessions') || '{}');
   let history = [];
+  let trendLoaded = false;
 
   const setupEl      = document.getElementById('setup');
   const setupBtn     = document.getElementById('setupBtn');
@@ -171,6 +258,7 @@ body { display: flex; flex-direction: column; }
   const chatEl       = document.getElementById('chat');
   const msgInput     = document.getElementById('msgInput');
   const sendBtn      = document.getElementById('sendBtn');
+  const inputArea    = document.getElementById('inputArea');
   const ticker       = document.getElementById('ticker');
   const sidebar      = document.getElementById('sidebar');
   const sidebarOvl   = document.getElementById('sidebarOverlay');
@@ -179,9 +267,13 @@ body { display: flex; flex-direction: column; }
   const newChatBtn   = document.getElementById('newChatBtn');
   const newChatSB    = document.getElementById('newChatSidebar');
   const chatList     = document.getElementById('chatList');
+  const trendCards   = document.getElementById('trendCards');
+  const trendUpdate  = document.getElementById('trendUpdate');
+  const trendRefreshBtn = document.getElementById('trendRefreshBtn');
 
   if (apiKey) setupEl.style.display = 'none';
 
+  // ── SETUP ──
   setupBtn.addEventListener('click', function() {
     const k = keyInput.value.trim();
     if (!k) return;
@@ -192,12 +284,24 @@ body { display: flex; flex-direction: column; }
   });
   keyInput.addEventListener('keydown', e => { if (e.key === 'Enter') setupBtn.click(); });
 
+  // ── TABS ──
+  window.switchTab = function(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.getElementById('panel-' + tab).classList.add('active');
+    inputArea.style.display = tab === 'chat' ? '' : 'none';
+    if (tab === 'trend' && !trendLoaded) loadTrending();
+  };
+
+  // ── SIDEBAR ──
   menuBtn.addEventListener('click', openSidebar);
   sidebarClose.addEventListener('click', closeSidebar);
   sidebarOvl.addEventListener('click', closeSidebar);
   function openSidebar() { sidebar.classList.add('on'); sidebarOvl.classList.add('on'); renderChatList(); }
   function closeSidebar() { sidebar.classList.remove('on'); sidebarOvl.classList.remove('on'); }
 
+  // ── SESSIONS ──
   function saveSessions() { localStorage.setItem('oban_sessions', JSON.stringify(sessions)); }
 
   function newChat() {
@@ -255,6 +359,7 @@ body { display: flex; flex-direction: column; }
   newChatBtn.addEventListener('click', newChat);
   newChatSB.addEventListener('click', newChat);
 
+  // ── TEXTAREA ──
   msgInput.addEventListener('input', function() {
     this.style.height = 'auto';
     this.style.height = Math.min(this.scrollHeight, 96) + 'px';
@@ -264,6 +369,7 @@ body { display: flex; flex-direction: column; }
   });
   sendBtn.addEventListener('click', doSend);
 
+  // ── TICKER ──
   async function fetchTicker() {
     try {
       const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,binancecoin,ripple,hyperliquid&vs_currencies=usd&include_24hr_change=true');
@@ -284,6 +390,143 @@ body { display: flex; flex-direction: column; }
     }
   }
 
+  // ── TRENDING MEME SOLANA ──
+  window.loadTrending = async function() {
+    trendRefreshBtn.classList.add('loading');
+    trendRefreshBtn.textContent = '⟳ LOADING...';
+    trendCards.innerHTML = `<div class="trend-loading"><div class="trend-loading-spinner">⟳</div><div class="trend-loading-text">FETCHING DEXSCREENER DATA...</div></div>`;
+
+    try {
+      // Fetch trending dari DexScreener - Solana meme tokens
+      const r = await fetch('https://api.dexscreener.com/token-boosts/top/v1');
+      const boosts = await r.json();
+
+      // Filter Solana only
+      const solTokens = boosts.filter(t => t.chainId === 'solana').slice(0, 8);
+
+      if (!solTokens.length) throw new Error('No data');
+
+      // Fetch price data untuk setiap token
+      const tokenAddresses = solTokens.map(t => t.tokenAddress).join(',');
+      const priceR = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${tokenAddresses}`);
+      const priceData = await priceR.json();
+
+      // Map price data by address
+      const pairMap = {};
+      if (priceData.pairs) {
+        priceData.pairs.forEach(pair => {
+          if (!pairMap[pair.baseToken.address]) {
+            pairMap[pair.baseToken.address] = pair;
+          }
+        });
+      }
+
+      // Render cards
+      trendCards.innerHTML = '';
+      let rank = 1;
+
+      for (const token of solTokens) {
+        const pair = pairMap[token.tokenAddress];
+        const name = token.description || (pair ? pair.baseToken.name : 'Unknown');
+        const symbol = pair ? pair.baseToken.symbol : '???';
+        const price = pair ? parseFloat(pair.priceUsd) : 0;
+        const change24 = pair ? parseFloat(pair.priceChange?.h24 || 0) : 0;
+        const volume24 = pair ? parseFloat(pair.volume?.h24 || 0) : 0;
+        const liquidity = pair ? parseFloat(pair.liquidity?.usd || 0) : 0;
+        const txns = pair ? (pair.txns?.h24?.buys || 0) + (pair.txns?.h24?.sells || 0) : 0;
+        const boostAmt = token.totalAmount || 0;
+        const addr = token.tokenAddress;
+        const shortAddr = addr ? addr.slice(0,6)+'...'+addr.slice(-4) : '';
+
+        // Badges
+        let badges = '';
+        if (rank === 1) badges += '<span class="tc-badge hot">🔥 #1 HOT</span>';
+        if (change24 > 50) badges += '<span class="tc-badge up">🚀 PUMP</span>';
+        if (change24 < -30) badges += '<span class="tc-badge warn">⚠ DUMP</span>';
+        if (boostAmt > 500) badges += '<span class="tc-badge hot">⚡ BOOSTED</span>';
+        if (rank <= 3 && change24 > 0) badges += '<span class="tc-badge up">▲ RISING</span>';
+
+        const priceStr = price > 0 ? (price < 0.001 ? '$'+price.toFixed(8) : '$'+price.toFixed(6)) : 'N/A';
+        const volStr = volume24 > 1000000 ? '$'+(volume24/1000000).toFixed(2)+'M' : volume24 > 1000 ? '$'+(volume24/1000).toFixed(1)+'K' : '$'+volume24.toFixed(0);
+        const liqStr = liquidity > 1000000 ? '$'+(liquidity/1000000).toFixed(2)+'M' : liquidity > 1000 ? '$'+(liquidity/1000).toFixed(1)+'K' : '$'+liquidity.toFixed(0);
+        const changeClass = change24 >= 0 ? 'up' : 'down';
+        const changeStr = (change24 >= 0 ? '+' : '') + change24.toFixed(2) + '%';
+
+        // AI analysis via Groq
+        let aiAnalysis = 'Menganalisis...';
+
+        const card = document.createElement('div');
+        card.className = 'trend-card' + (rank === 1 ? ' rank1' : rank === 2 ? ' rank2' : '');
+        card.innerHTML = `
+          <div class="tc-top">
+            <div class="tc-rank ${rank===1?'r1'}">#${rank}</div>
+            <div class="tc-badges">${badges}</div>
+          </div>
+          <div class="tc-name">${symbol} <span style="font-size:11px;color:rgba(255,140,0,0.5);font-family:'Share Tech Mono',monospace;">${name}</span></div>
+          <div class="tc-addr">${shortAddr}</div>
+          <div class="tc-stats">
+            <div class="tc-stat"><div class="tc-stat-label">PRICE</div><div class="tc-stat-val">${priceStr}</div></div>
+            <div class="tc-stat"><div class="tc-stat-label">24H CHANGE</div><div class="tc-stat-val ${changeClass}">${changeStr}</div></div>
+            <div class="tc-stat"><div class="tc-stat-label">VOLUME 24H</div><div class="tc-stat-val">${volStr}</div></div>
+            <div class="tc-stat"><div class="tc-stat-label">LIQUIDITY</div><div class="tc-stat-val">${liqStr}</div></div>
+          </div>
+          <div class="tc-ai">
+            <div class="tc-ai-label">◆ OBAN ANALYSIS</div>
+            <div class="tc-ai-text" id="ai-${rank}">⟳ Menganalisis token...</div>
+          </div>`;
+        trendCards.appendChild(card);
+
+        // AI analysis async
+        analyzeToken(rank, symbol, name, price, change24, volume24, liquidity, txns, boostAmt);
+        rank++;
+      }
+
+      trendLoaded = true;
+      trendUpdate.textContent = 'Update: ' + new Date().toLocaleTimeString('id-ID');
+
+    } catch(e) {
+      trendCards.innerHTML = `<div class="trend-loading">
+        <div style="font-size:24px;">⚠</div>
+        <div class="trend-loading-text">GAGAL LOAD DATA — COBA LAGI</div>
+        <div style="font-size:10px;color:rgba(255,140,0,0.25);margin-top:8px;">DexScreener API mungkin down atau rate limit</div>
+      </div>`;
+    }
+
+    trendRefreshBtn.classList.remove('loading');
+    trendRefreshBtn.textContent = '⟳ REFRESH';
+  };
+
+  async function analyzeToken(rank, symbol, name, price, change24, volume24, liquidity, txns, boostAmt) {
+    if (!apiKey) {
+      const el = document.getElementById('ai-' + rank);
+      if (el) el.textContent = 'Masukkan API key untuk analisis AI.';
+      return;
+    }
+    try {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          max_tokens: 120,
+          messages: [
+            { role: 'system', content: 'Kamu adalah OBAN, analis crypto meme coin Solana. Berikan analisis singkat 2-3 kalimat dalam bahasa Indonesia. Jujur dan to the point tentang potensi dan risiko.' },
+            { role: 'user', content: `Analisis token: ${symbol} (${name}). Price: $${price}, 24h change: ${change24}%, Volume 24h: $${volume24}, Liquidity: $${liquidity}, Boost amount: ${boostAmt}. Apakah ini hype atau rug? Singkat saja.` }
+          ]
+        })
+      });
+      const data = await res.json();
+      const el = document.getElementById('ai-' + rank);
+      if (el && data.choices && data.choices[0]) {
+        el.textContent = data.choices[0].message.content;
+      }
+    } catch(e) {
+      const el = document.getElementById('ai-' + rank);
+      if (el) el.textContent = 'Analisis tidak tersedia.';
+    }
+  }
+
+  // ── CRYPTO CONTEXT ──
   async function searchCoin(q) {
     try {
       const r = await fetch('https://api.coingecko.com/api/v3/search?query='+encodeURIComponent(q));
@@ -329,6 +572,7 @@ body { display: flex; flex-direction: column; }
     return kw.some(k => text.toLowerCase().includes(k));
   }
 
+  // ── UI ──
   function addMsg(role, text, save = true) {
     const wm = document.getElementById('welcomeMsg');
     if (wm) wm.remove();
@@ -370,6 +614,7 @@ body { display: flex; flex-direction: column; }
 
   function removeTyping() { const el = document.getElementById('typing'); if (el) el.remove(); }
 
+  // ── SEND ──
   async function doSend() {
     if (busy) return;
     const text = msgInput.value.trim();
