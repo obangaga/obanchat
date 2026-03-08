@@ -1,176 +1,955 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OBAN TERMINAL PRO</title>
+<title>OBAN TERMINAL PRO v2.0</title>
 <style>
+:root {
+  --bg:#030b0f; --text:#00f7ff; --accent:#00d4aa; --danger:#ff3d7f; --panel:#02262b; --border:#03343a;
+}
+body.dark { --bg:#030b0f; --text:#00f7ff; }
+body.light { --bg:#f0f4f8; --text:#0a1929; --accent:#007766; --danger:#cc0033; --panel:#d9e2ec; --border:#b0c4d4; }
+
+*{box-sizing:border-box; margin:0; padding:0}
 body{
-background:#030b0f;
-color:#00f7ff;
-font-family:monospace;
-margin:0;
-padding:0;
+  background:var(--bg); color:var(--text); font-family:'Courier New',monospace;
+  transition:all 0.3s; overflow-x:hidden;
 }
 header{
-text-align:center;
-padding:20px;
-font-size:22px;
-letter-spacing:4px;
-border-bottom:1px solid #03343a;
+  text-align:center; padding:15px 10px; font-size:20px; letter-spacing:3px;
+  border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;
 }
+header h1{flex:1; text-align:center}
 #ticker{
-padding:10px;
-border-bottom:1px solid #03343a;
-font-size:14px;
+  padding:8px 15px; border-bottom:1px solid var(--border); font-size:13px;
+  display:flex; gap:20px; overflow-x:auto; white-space:nowrap;
 }
-.tabs{
-display:flex;
-}
+.ticker-item{display:flex; gap:5px}
+.ticker-item.positive{color:var(--accent)}
+.ticker-item.negative{color:var(--danger)}
+
+.tabs{display:flex; border-bottom:1px solid var(--border)}
 .tab{
-flex:1;
-padding:12px;
-text-align:center;
-cursor:pointer;
-border-bottom:1px solid #03343a;
+  flex:1; padding:12px; text-align:center; cursor:pointer;
+  border-bottom:2px solid transparent; transition:all 0.2s;
+  font-weight:bold;
 }
-.tab.active{
-background:#02262b;
+.tab:hover{background:var(--panel)}
+.tab.active{border-bottom-color:var(--accent); background:var(--panel)}
+
+.section{display:none; padding:15px; max-height:calc(100vh - 180px); overflow-y:auto}
+.section.active{display:block}
+
+/* Token List */
+.token-filters{display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap}
+.token-filters input,.token-filters select{
+  background:var(--panel); border:1px solid var(--border); color:var(--text);
+  padding:8px; flex:1; min-width:120px;
 }
-.section{
-display:none;
-padding:10px;
+.token{  border:1px solid var(--border); padding:12px; margin-bottom:8px;
+  display:grid; grid-template-columns:1fr auto auto auto; gap:10px; align-items:center;
+  border-radius:4px; transition:transform 0.1s; cursor:pointer;
 }
-.section.active{
-display:block;
-}
-.token{
-border-bottom:1px solid #02262b;
-padding:10px;
-display:flex;
-justify-content:space-between;
-}
-.token span{
-font-size:13px;
-}
-input,button{
-background:#01191d;
-border:1px solid #00f7ff;
-color:#00f7ff;
-padding:8px;
-margin:5px 0;
-width:100%;
-}
+.token:hover{transform:translateX(3px); border-color:var(--accent)}
+.token-name{font-weight:bold}
+.token-symbol{opacity:0.7; font-size:12px}
+.token-price{font-weight:bold}
+.token-change.positive{color:var(--accent)}
+.token-change.negative{color:var(--danger)}
+.token-chart{width:60px; height:30px}
+
+/* Chat */
 #chatBox{
-height:300px;
-overflow:auto;
-border:1px solid #02262b;
-padding:10px;
-margin-bottom:10px;
+  height:250px; overflow-y:auto; border:1px solid var(--border);
+  padding:12px; margin:10px 0; background:var(--panel); border-radius:4px;
+}
+.chat-msg{margin:8px 0; line-height:1.4}
+.chat-msg.user{color:var(--accent); text-align:right}
+.chat-msg.ai{color:var(--text)}
+.chat-meta{font-size:11px; opacity:0.6; margin-top:3px}
+
+.input-group{display:flex; gap:8px; margin:10px 0}
+.input-group input,.input-group textarea{
+  flex:1; background:var(--panel); border:1px solid var(--border);
+  color:var(--text); padding:10px; border-radius:4px;
+}
+.input-group textarea{min-height:60px; resize:vertical}
+button{
+  background:var(--accent); border:none; color:#000; padding:10px 20px;
+  cursor:pointer; border-radius:4px; font-weight:bold; transition:opacity 0.2s;
+}
+button:hover{opacity:0.9}
+button.secondary{background:var(--panel); color:var(--text); border:1px solid var(--border)}
+button.danger{background:var(--danger); color:#fff}
+
+/* Portfolio */
+.portfolio-item{
+  display:flex; justify-content:space-between; padding:10px;
+  border-bottom:1px solid var(--border); align-items:center;
+}
+.portfolio-actions button{padding:5px 10px; font-size:12px; margin-left:5px}
+
+/* Alerts */
+.alert-form{display:grid; grid-template-columns:2fr 1fr auto; gap:10px; margin:10px 0}
+.alert-item{
+  display:flex; justify-content:space-between; padding:10px;
+  background:var(--panel); margin:5px 0; border-radius:4px; font-size:14px;
+}
+/* Converter */
+.converter-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:15px}
+.converter-card{
+  background:var(--panel); padding:15px; border-radius:6px; border:1px solid var(--border);
+}
+.converter-card select,.converter-card input{
+  width:100%; padding:10px; margin:8px 0; background:var(--bg);
+  border:1px solid var(--border); color:var(--text); border-radius:4px;
+}
+
+/* Settings */
+.settings-grid{display:grid; gap:15px}
+.setting-item{display:flex; justify-content:space-between; align-items:center; padding:10px 0}
+.setting-item label{opacity:0.9}
+
+/* Toast */
+#toast{
+  position:fixed; bottom:20px; right:20px; background:var(--panel);
+  border:1px solid var(--accent); padding:12px 20px; border-radius:6px;
+  display:none; z-index:1000; animation:slideIn 0.3s ease;
+}
+@keyframes slideIn{from{transform:translateX(100px); opacity:0} to{transform:translateX(0); opacity:1}}
+
+/* Loading */
+.loading{opacity:0.6; font-style:italic}
+
+/* Responsive */
+@media(max-width:768px){
+  .token{grid-template-columns:1fr 1fr; gap:5px}
+  .alert-form{grid-template-columns:1fr}
+  header{flex-direction:column; gap:10px}
 }
 </style>
 </head>
-<body><header>OBAN TERMINAL PRO</header><div id="ticker">Loading market...</div><div class="tabs">
-<div class="tab active" onclick="openTab('ai')">AI CHAT</div>
-<div class="tab" onclick="openTab('tokens')">TRENDING TOKENS</div>
-</div><div id="ai" class="section active">
-<input id="apiKey" placeholder="Enter Groq API Key">
-<button onclick="saveKey()">Initialize System</button><div id="chatBox"></div>
-<input id="prompt" placeholder="Ask AI about crypto...">
-<button onclick="sendAI()">Send</button>
-</div><div id="tokens" class="section">
-<div id="tokenList">Loading tokens...</div>
-</div><script>
-let apiKey="";
+<body class="dark">
+<header>
+  <button class="secondary" id="themeToggle">🌓</button>
+  <h1>OBAN TERMINAL PRO <span style="font-size:12px;opacity:0.7">v2.0</span></h1>
+  <button class="secondary" id="settingsBtn">⚙️</button>
+</header>
 
-function openTab(id){
-document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+<div id="ticker">Loading market data...</div>
 
-document.getElementById(id).classList.add('active');
-event.target.classList.add('active');
-}
-
-function saveKey(){
-apiKey=document.getElementById('apiKey').value;
-localStorage.setItem('groq_key',apiKey);
-alert('System Initialized');
-}
-
-async function loadTicker(){
-try{
-let r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd');
-let d=await r.json();
-
-document.getElementById('ticker').innerText=
-`BTC $${d.bitcoin.usd} | ETH $${d.ethereum.usd} | SOL $${d.solana.usd}`;
-}catch(e){
-console.log(e);
-}
-}
-
-async function loadTokens(){
-try{
-let r=await fetch('https://api.dexscreener.com/latest/dex/pairs/solana');
-let d=await r.json();
-
-let html="";
-
-let tokens=d.pairs.slice(0,20);
-
-tokens.forEach(t=>{
-html+=`
-<div class="token">
-<div>
-<b>${t.baseToken.name}</b><br>
-<span>${t.baseToken.symbol}</span>
+<div class="tabs">
+  <div class="tab active" data-tab="ai">🤖 AI CHAT</div>
+  <div class="tab" data-tab="tokens">🪙 TOKENS</div>
+  <div class="tab" data-tab="portfolio">💼 PORTFOLIO</div>
+  <div class="tab" data-tab="alerts">🔔 ALERTS</div>
+  <div class="tab" data-tab="converter">🔄 CONVERTER</div>
 </div>
-<div>
-<span>$${Number(t.priceUsd).toFixed(6)}</span><br>
-<span>Vol ${Math.round(t.volume.h24)}</span>
+<!-- AI CHAT SECTION -->
+<div id="ai" class="section active">
+  <div class="input-group">
+    <input type="password" id="apiKey" placeholder="Groq API Key (opsional)">
+    <button onclick="saveKey()">💾 Save</button>
+  </div>
+  
+  <div class="input-group">
+    <select id="aiModel">
+      <option value="llama3-70b-8192">Llama3 70B</option>
+      <option value="llama3-8b-8192">Llama3 8B</option>
+      <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
+      <option value="gemma-7b-it">Gemma 7B</option>
+    </select>
+    <button class="secondary" onclick="clearChat()">🗑️ Clear</button>
+  </div>
+  
+  <div id="chatBox"></div>
+  
+  <div class="input-group">
+    <textarea id="prompt" placeholder="Tanya AI tentang crypto... (Ctrl+Enter untuk kirim)"></textarea>
+  </div>
+  <button onclick="sendAI()">🚀 Send</button>
+  
+  <div style="margin-top:15px; font-size:12px; opacity:0.7">
+    <strong>Shortcuts:</strong> Ctrl+K = fokus chat | Ctrl+Enter = kirim | Esc = clear
+  </div>
 </div>
-</div>`;
+
+<!-- TOKENS SECTION -->
+<div id="tokens" class="section">
+  <div class="token-filters">
+    <input type="text" id="tokenSearch" placeholder="🔍 Cari token..." oninput="filterTokens()">
+    <select id="tokenSort" onchange="renderTokens()">
+      <option value="volume">Sort: Volume</option>
+      <option value="price">Sort: Price</option>
+      <option value="change">Sort: Change 24h</option>
+      <option value="name">Sort: Name</option>
+    </select>
+    <select id="tokenChain" onchange="loadTokens()">
+      <option value="solana">Solana</option>
+      <option value="ethereum">Ethereum</option>
+      <option value="base">Base</option>
+    </select>
+  </div>
+  <div id="tokenList">Loading tokens...</div>
+</div>
+
+<!-- PORTFOLIO SECTION --><div id="portfolio" class="section">
+  <div class="input-group">
+    <input type="text" id="portfolioToken" placeholder="Simbol token (BTC, ETH, SOL...)">
+    <input type="number" id="portfolioAmount" placeholder="Jumlah" step="any">
+    <input type="number" id="portfolioBuyPrice" placeholder="Harga beli (USD)" step="any">
+    <button onclick="addToPortfolio()">➕ Add</button>
+  </div>
+  <div id="portfolioSummary" style="margin:15px 0; padding:10px; background:var(--panel); border-radius:4px"></div>
+  <div id="portfolioList"></div>
+</div>
+
+<!-- ALERTS SECTION -->
+<div id="alerts" class="section">
+  <div class="alert-form">
+    <input type="text" id="alertToken" placeholder="Token (BTC, ETH...)">
+    <input type="number" id="alertPrice" placeholder="Target price USD" step="any">
+    <button onclick="addAlert()">🔔 Set Alert</button>
+  </div>
+  <div id="alertsList"></div>
+  <div style="margin-top:10px; font-size:12px; opacity:0.7">
+    💡 Izinkan notifikasi browser untuk menerima alert realtime!
+  </div>
+</div>
+
+<!-- CONVERTER SECTION -->
+<div id="converter" class="section">
+  <div class="converter-grid">
+    <div class="converter-card">
+      <h4>💱 Crypto Converter</h4>
+      <select id="convertFrom" onchange="calculateConversion()">
+        <option value="BTC">BTC</option>
+        <option value="ETH">ETH</option>
+        <option value="SOL">SOL</option>
+        <option value="USDT">USDT</option>
+      </select>
+      <input type="number" id="convertAmount" placeholder="Jumlah" value="1" step="any" oninput="calculateConversion()">
+      <select id="convertTo" onchange="calculateConversion()">
+        <option value="USDT">USDT</option>
+        <option value="BTC">BTC</option>
+        <option value="ETH">ETH</option>
+        <option value="SOL">SOL</option>
+      </select>
+      <div id="convertResult" style="margin-top:10px; font-weight:bold; font-size:18px">-</div>
+    </div>
+    
+    <div class="converter-card">
+      <h4>📊 Quick Stats</h4>
+      <div id="quickStats">Loading...</div>
+    </div>
+  </div></div>
+
+<!-- SETTINGS MODAL -->
+<div id="settingsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center">
+  <div style="background:var(--panel); padding:25px; border-radius:8px; width:90%; max-width:500px; border:1px solid var(--border)">
+    <h3 style="margin-bottom:20px">⚙️ Settings</h3>
+    <div class="settings-grid">
+      <div class="setting-item">
+        <label>Theme</label>
+        <select id="themeSelect" onchange="changeTheme(this.value)">
+          <option value="dark">Dark Mode</option>
+          <option value="light">Light Mode</option>
+        </select>
+      </div>
+      <div class="setting-item">
+        <label>Auto-refresh Ticker</label>
+        <input type="checkbox" id="autoRefresh" checked onchange="toggleAutoRefresh(this.checked)">
+      </div>
+      <div class="setting-item">
+        <label>Notification Permission</label>
+        <button class="secondary" onclick="requestNotificationPermission()">🔔 Enable</button>
+      </div>
+      <hr style="border-color:var(--border)">
+      <button class="secondary" onclick="exportData()">📤 Export Config</button>
+      <button class="secondary" onclick="document.getElementById('importFile').click()">📥 Import Config</button>
+      <input type="file" id="importFile" style="display:none" onchange="importData(this)">
+      <button class="danger" onclick="clearAllData()">🗑️ Clear All Data</button>
+    </div>
+    <div style="text-align:right; margin-top:20px">
+      <button onclick="closeSettings()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST NOTIFICATION -->
+<div id="toast"></div>
+
+<script>
+// ============ GLOBAL STATE ============
+let state = {
+  apiKey: localStorage.getItem('groq_key') || '',
+  theme: localStorage.getItem('oban_theme') || 'dark',
+  portfolio: JSON.parse(localStorage.getItem('oban_portfolio') || '[]'),
+  alerts: JSON.parse(localStorage.getItem('oban_alerts') || '[]'),
+  chatHistory: JSON.parse(localStorage.getItem('oban_chats') || '[]'),
+  prices: {},
+  autoRefresh: true,
+  tokens: []
+};
+// ============ INIT ============
+document.addEventListener('DOMContentLoaded', () => {
+  applyTheme(state.theme);
+  document.getElementById('apiKey').value = state.apiKey;
+  renderChatHistory();
+  renderPortfolio();
+  renderAlerts();
+  loadPrices();
+  loadTokens();
+  setupEventListeners();
+  setupKeyboardShortcuts();
+  
+  // Request notification permission
+  if(Notification.permission !== 'granted' && Notification.permission !== 'denied'){
+    Notification.requestPermission();
+  }
 });
 
-document.getElementById('tokenList').innerHTML=html;
-
-}catch(e){
-console.log(e);
+// ============ THEME & UI ============
+function applyTheme(theme){
+  document.body.className = theme;
+  localStorage.setItem('oban_theme', theme);
 }
+
+function changeTheme(theme){
+  state.theme = theme;
+  applyTheme(theme);
+  showToast(`Theme changed to ${theme}`);
+}
+
+document.getElementById('themeToggle').onclick = () => {
+  const newTheme = state.theme === 'dark' ? 'light' : 'dark';
+  changeTheme(newTheme);
+};
+
+// Tab switching
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.onclick = (e) => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    e.currentTarget.classList.add('active');
+    document.getElementById(e.currentTarget.dataset.tab).classList.add('active');
+  };
+});
+
+// Settings modal
+document.getElementById('settingsBtn').onclick = () => {
+  document.getElementById('settingsModal').style.display = 'flex';
+};
+function closeSettings(){  document.getElementById('settingsModal').style.display = 'none';
+}
+window.onclick = (e) => {
+  if(e.target.id === 'settingsModal') closeSettings();
+};
+
+// Toast notification
+function showToast(message, type='info'){
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.style.borderColor = type === 'error' ? 'var(--danger)' : 'var(--accent)';
+  toast.style.display = 'block';
+  setTimeout(() => toast.style.display = 'none', 3000);
+}
+
+// ============ API FUNCTIONS ============
+async function fetchJSON(url, options={}){
+  try{
+    const response = await fetch(url, {...options, headers: {'Content-Type':'application/json', ...options.headers}});
+    if(!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
+  }catch(e){
+    console.error('API Error:', e);
+    showToast(`API Error: ${e.message}`, 'error');
+    return null;
+  }
+}
+
+async function loadPrices(){
+  const data = await fetchJSON('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,usd-coin&vs_currencies=usd&include_24hr_change=true');
+  if(data){
+    state.prices = {
+      BTC: {usd: data.bitcoin.usd, change: data.bitcoin.usd_24h_change},
+      ETH: {usd: data.ethereum.usd, change: data.ethereum.usd_24h_change},
+      SOL: {usd: data.solana.usd, change: data.solana.usd_24h_change},
+      USDT: {usd: 1, change: 0}
+    };
+    updateTicker();
+    updateQuickStats();
+    checkAlerts();
+  }
+}
+
+async function loadTokens(chain='solana'){
+  const list = document.getElementById('tokenList');
+  list.innerHTML = '<div class="loading">Loading tokens...</div>';
+  
+  const endpoints = {
+    solana: 'https://api.dexscreener.com/latest/dex/pairs/solana',
+    ethereum: 'https://api.dexscreener.com/latest/dex/pairs/ethereum',    base: 'https://api.dexscreener.com/latest/dex/pairs/base'
+  };
+  
+  const data = await fetchJSON(endpoints[chain] || endpoints.solana);
+  if(data?.pairs){
+    state.tokens = data.pairs.slice(0, 50).map(p => ({
+      name: p.baseToken.name,
+      symbol: p.baseToken.symbol,
+      address: p.baseToken.address,
+      priceUsd: parseFloat(p.priceUsd) || 0,
+      volume24h: parseFloat(p.volume?.h24) || 0,
+      priceChange24h: parseFloat(p.priceChange?.h24) || 0,
+      liquidity: parseFloat(p.liquidity?.usd) || 0,
+      chain: chain,
+      chart: generateMiniChart()
+    }));
+    renderTokens();
+  }
+}
+
+function generateMiniChart(){
+  // Generate random mini chart data for visualization
+  return Array.from({length: 20}, () => Math.random() * 100);
+}
+
+// ============ TICKER ============
+function updateTicker(){
+  const ticker = document.getElementById('ticker');
+  if(!state.prices.BTC) return;
+  
+  ticker.innerHTML = Object.entries(state.prices).map(([symbol, data]) => {
+    const changeClass = data.change >= 0 ? 'positive' : 'negative';
+    const sign = data.change >= 0 ? '+' : '';
+    return `<div class="ticker-item ${changeClass}">
+      <strong>${symbol}</strong> $${data.usd.toLocaleString()} 
+      <span>(${sign}${data.change?.toFixed(2)}%)</span>
+    </div>`;
+  }).join('');
+}
+
+// ============ TOKENS UI ============
+function renderTokens(){
+  const list = document.getElementById('tokenList');
+  const search = document.getElementById('tokenSearch').value.toLowerCase();
+  const sort = document.getElementById('tokenSort').value;
+  
+  let filtered = state.tokens.filter(t => 
+    t.name.toLowerCase().includes(search) || t.symbol.toLowerCase().includes(search)
+  );
+    // Sorting
+  filtered.sort((a,b) => {
+    if(sort === 'volume') return b.volume24h - a.volume24h;
+    if(sort === 'price') return b.priceUsd - a.priceUsd;
+    if(sort === 'change') return b.priceChange24h - a.priceChange24h;
+    if(sort === 'name') return a.name.localeCompare(b.name);
+    return 0;
+  });
+  
+  if(filtered.length === 0){
+    list.innerHTML = '<div style="opacity:0.7">No tokens found</div>';
+    return;
+  }
+  
+  list.innerHTML = filtered.map(t => {
+    const changeClass = t.priceChange24h >= 0 ? 'positive' : 'negative';
+    const sign = t.priceChange24h >= 0 ? '+' : '';
+    return `<div class="token" onclick="copyToClipboard('${t.symbol}')">
+      <div>
+        <div class="token-name">${t.name}</div>
+        <div class="token-symbol">${t.symbol} • ${t.chain.toUpperCase()}</div>
+      </div>
+      <div class="token-price">$${t.priceUsd < 0.01 ? t.priceUsd.toExponential(2) : t.priceUsd.toFixed(4)}</div>
+      <div class="token-change ${changeClass}">${sign}${t.priceChange24h?.toFixed(2)}%</div>
+      <canvas class="token-chart" width="60" height="30" id="chart-${t.symbol}"></canvas>
+    </div>`;
+  }).join('');
+  
+  // Draw mini charts
+  filtered.forEach(t => {
+    const canvas = document.getElementById(`chart-${t.symbol}`);
+    if(canvas) drawMiniChart(canvas, t.chart);
+  });
+}
+
+function drawMiniChart(canvas, data){
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--accent');
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  
+  const max = Math.max(...data);
+  const min = Math.min(...data);
+  const range = max - min || 1;
+  
+  data.forEach((val, i) => {
+    const x = (i / (data.length - 1)) * canvas.width;
+    const y = canvas.height - ((val - min) / range) * canvas.height;
+    if(i === 0) ctx.moveTo(x, y);    else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+}
+
+function filterTokens(){ renderTokens(); }
+
+// ============ AI CHAT ============
+function saveKey(){
+  state.apiKey = document.getElementById('apiKey').value;
+  localStorage.setItem('groq_key', state.apiKey);
+  showToast('API Key saved!');
+}
+
+function renderChatHistory(){
+  const box = document.getElementById('chatBox');
+  if(state.chatHistory.length === 0){
+    box.innerHTML = '<div style="opacity:0.6">💬 Start chatting with AI about crypto...</div>';
+    return;
+  }
+  box.innerHTML = state.chatHistory.slice(-50).map(msg => 
+    `<div class="chat-msg ${msg.role}">
+      ${msg.role === 'user' ? '👤' : '🤖'} ${escapeHtml(msg.content)}
+      <div class="chat-meta">${new Date(msg.timestamp).toLocaleTimeString()}</div>
+    </div>`
+  ).join('');
+  box.scrollTop = box.scrollHeight;
+}
+
+function clearChat(){
+  if(confirm('Clear chat history?')){
+    state.chatHistory = [];
+    localStorage.removeItem('oban_chats');
+    renderChatHistory();
+    showToast('Chat cleared');
+  }
 }
 
 async function sendAI(){
-let prompt=document.getElementById('prompt').value;
-let box=document.getElementById('chatBox');
-
-box.innerHTML+=`<div>> ${prompt}</div>`;
-
-try{
-let r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
-method:'POST',
-headers:{
-'Content-Type':'application/json',
-'Authorization':'Bearer '+apiKey
-},
-body:JSON.stringify({
-model:'llama3-70b-8192',
-messages:[{role:'user',content:prompt}]
-})
-});
-
-let d=await r.json();
-
-let reply=d.choices[0].message.content;
-
-box.innerHTML+=`<div>${reply}</div>`;
-box.scrollTop=box.scrollHeight;
-
-}catch(e){
-box.innerHTML+=`<div>AI error</div>`;
+  const prompt = document.getElementById('prompt').value.trim();
+  const model = document.getElementById('aiModel').value;
+  if(!prompt) return;
+  
+  const box = document.getElementById('chatBox');
+  
+  // Add user message
+  const userMsg = {role:'user', content:prompt, timestamp:Date.now()};
+  state.chatHistory.push(userMsg);
+  localStorage.setItem('oban_chats', JSON.stringify(state.chatHistory));
+  renderChatHistory();  document.getElementById('prompt').value = '';
+  
+  // Show loading
+  const loadingId = 'loading-' + Date.now();
+  box.innerHTML += `<div class="chat-msg ai" id="${loadingId}">🤖 Thinking<span class="dots">...</span></div>`;
+  box.scrollTop = box.scrollHeight;
+  
+  // Animate dots
+  const dots = document.querySelector(`#${loadingId} .dots`);
+  const dotAnim = setInterval(() => {
+    dots.textContent = dots.textContent.length >= 3 ? '.' : dots.textContent + '.';
+  }, 300);
+  
+  try{
+    if(!state.apiKey){
+      throw new Error('Please enter your Groq API Key first');
+    }
+    
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${state.apiKey}`
+      },
+      body: JSON.stringify({
+        model: model,
+        messages: [
+          {role:'system', content:'You are a crypto trading expert assistant. Be concise, accurate, and helpful. Use markdown for formatting.'},
+          ...state.chatHistory.slice(-10).map(m => ({role:m.role, content:m.content}))
+        ],
+        temperature: 0.3,
+        max_tokens: 1000
+      })
+    });
+    
+    clearInterval(dotAnim);
+    document.getElementById(loadingId)?.remove();
+    
+    if(!response.ok){
+      const err = await response.json();
+      throw new Error(err.error?.message || `API Error ${response.status}`);
+    }
+    
+    const data = await response.json();
+    const reply = data.choices[0].message.content;
+    
+    // Add AI response
+    const aiMsg = {role:'ai', content:reply, timestamp:Date.now()};
+    state.chatHistory.push(aiMsg);
+    localStorage.setItem('oban_chats', JSON.stringify(state.chatHistory));    renderChatHistory();
+    
+  }catch(e){
+    clearInterval(dotAnim);
+    document.getElementById(loadingId)?.remove();
+    box.innerHTML += `<div class="chat-msg ai" style="color:var(--danger)">❌ Error: ${e.message}</div>`;
+    showToast('AI request failed', 'error');
+  }
+  box.scrollTop = box.scrollHeight;
 }
+
+function escapeHtml(text){
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML.replace(/\n/g, '<br>');
 }
 
-loadTicker();
+// ============ PORTFOLIO ============
+function addToPortfolio(){
+  const symbol = document.getElementById('portfolioToken').value.toUpperCase();
+  const amount = parseFloat(document.getElementById('portfolioAmount').value);
+  const buyPrice = parseFloat(document.getElementById('portfolioBuyPrice').value);
+  
+  if(!symbol || !amount || !buyPrice){
+    showToast('Please fill all fields', 'error');
+    return;
+  }
+  
+  const currentPrice = state.prices[symbol]?.usd;
+  if(!currentPrice){
+    showToast('Price data not available for ' + symbol, 'error');
+    return;
+  }
+  
+  const item = {
+    id: Date.now(),
+    symbol,
+    amount,
+    buyPrice,
+    currentPrice,
+    added: Date.now()
+  };
+  
+  state.portfolio.push(item);
+  localStorage.setItem('oban_portfolio', JSON.stringify(state.portfolio));
+  
+  document.getElementById('portfolioToken').value = '';
+  document.getElementById('portfolioAmount').value = '';
+  document.getElementById('portfolioBuyPrice').value = '';
+    renderPortfolio();
+  showToast(`${amount} ${symbol} added to portfolio`);
+}
+
+function renderPortfolio(){
+  const list = document.getElementById('portfolioList');
+  const summary = document.getElementById('portfolioSummary');
+  
+  if(state.portfolio.length === 0){
+    list.innerHTML = '<div style="opacity:0.6">No assets added yet</div>';
+    summary.innerHTML = '';
+    return;
+  }
+  
+  let totalValue = 0, totalCost = 0;
+  
+  list.innerHTML = state.portfolio.map(item => {
+    const currentPrice = state.prices[item.symbol]?.usd || item.currentPrice;
+    const value = item.amount * currentPrice;
+    const cost = item.amount * item.buyPrice;
+    const pnl = value - cost;
+    const pnlPercent = ((currentPrice - item.buyPrice) / item.buyPrice) * 100;
+    
+    totalValue += value;
+    totalCost += cost;
+    
+    const pnlClass = pnl >= 0 ? 'positive' : 'negative';
+    const sign = pnl >= 0 ? '+' : '';
+    
+    return `<div class="portfolio-item">
+      <div>
+        <strong>${item.symbol}</strong><br>
+        <small>${item.amount} @ $${item.buyPrice.toLocaleString()}</small>
+      </div>
+      <div style="text-align:right">
+        <div>$${value.toLocaleString(undefined, {maximumFractionDigits:2})}</div>
+        <div class="${pnlClass}">${sign}$${Math.abs(pnl).toLocaleString(undefined, {maximumFractionDigits:2})} (${sign}${pnlPercent.toFixed(2)}%)</div>
+      </div>
+      <div class="portfolio-actions">
+        <button class="secondary" onclick="removeFromPortfolio(${item.id})">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+  
+  const totalPnl = totalValue - totalCost;
+  const totalPnlPercent = totalCost > 0 ? ((totalValue - totalCost) / totalCost) * 100 : 0;
+  const pnlClass = totalPnl >= 0 ? 'positive' : 'negative';
+  const sign = totalPnl >= 0 ? '+' : '';
+  
+  summary.innerHTML = `    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; text-align:center">
+      <div><strong>Total Value</strong><br>$${totalValue.toLocaleString(undefined, {maximumFractionDigits:2})}</div>
+      <div><strong>Total Cost</strong><br>$${totalCost.toLocaleString(undefined, {maximumFractionDigits:2})}</div>
+      <div><strong>P&L</strong><br><span class="${pnlClass}">${sign}$${Math.abs(totalPnl).toLocaleString(undefined, {maximumFractionDigits:2})} (${sign}${totalPnlPercent.toFixed(2)}%)</span></div>
+    </div>
+  `;
+}
+
+function removeFromPortfolio(id){
+  if(confirm('Remove this asset?')){
+    state.portfolio = state.portfolio.filter(p => p.id !== id);
+    localStorage.setItem('oban_portfolio', JSON.stringify(state.portfolio));
+    renderPortfolio();
+    showToast('Asset removed');
+  }
+}
+
+// ============ ALERTS ============
+function addAlert(){
+  const token = document.getElementById('alertToken').value.toUpperCase();
+  const targetPrice = parseFloat(document.getElementById('alertPrice').value);
+  
+  if(!token || !targetPrice){
+    showToast('Please fill both fields', 'error');
+    return;
+  }
+  
+  state.alerts.push({id:Date.now(), token, targetPrice, active:true, created:Date.now()});
+  localStorage.setItem('oban_alerts', JSON.stringify(state.alerts));
+  
+  document.getElementById('alertToken').value = '';
+  document.getElementById('alertPrice').value = '';
+  
+  renderAlerts();
+  showToast(`Alert set for ${token} at $${targetPrice}`);
+}
+
+function renderAlerts(){
+  const list = document.getElementById('alertsList');
+  
+  if(state.alerts.length === 0){
+    list.innerHTML = '<div style="opacity:0.6">No active alerts</div>';
+    return;
+  }
+  
+  list.innerHTML = state.alerts.map(alert => {
+    const currentPrice = state.prices[alert.token]?.usd;
+    const reached = currentPrice && ((alert.targetPrice <= currentPrice && alert.targetPrice > 0) || 
+                                     (alert.targetPrice >= currentPrice && alert.targetPrice < currentPrice * 2));
+        return `<div class="alert-item" style="border-left:3px solid ${reached ? 'var(--accent)' : 'var(--border)'}">
+      <div>
+        <strong>${alert.token}</strong> → $${alert.targetPrice.toLocaleString()}
+        ${currentPrice ? `<br><small>Current: $${currentPrice.toLocaleString()}</small>` : ''}
+      </div>
+      <div>
+        <button class="secondary" onclick="toggleAlert(${alert.id})">${alert.active ? '🔕' : '🔔'}</button>
+        <button class="danger" onclick="removeAlert(${alert.id})">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function removeAlert(id){
+  state.alerts = state.alerts.filter(a => a.id !== id);
+  localStorage.setItem('oban_alerts', JSON.stringify(state.alerts));
+  renderAlerts();
+  showToast('Alert removed');
+}
+
+function toggleAlert(id){
+  const alert = state.alerts.find(a => a.id === id);
+  if(alert){
+    alert.active = !alert.active;
+    localStorage.setItem('oban_alerts', JSON.stringify(state.alerts));
+    renderAlerts();
+  }
+}
+
+function checkAlerts(){
+  if(Notification.permission !== 'granted') return;
+  
+  state.alerts.forEach(alert => {
+    if(!alert.active) return;
+    const currentPrice = state.prices[alert.token]?.usd;
+    if(!currentPrice) return;
+    
+    // Simple trigger logic
+    const triggered = (alert.targetPrice <= currentPrice && alert.targetPrice > 0) || 
+                     (alert.targetPrice >= currentPrice && alert.targetPrice < currentPrice * 2);
+    
+    if(triggered && !alert.notified){
+      new Notification(`🚨 ${alert.token} Alert!`, {
+        body: `${alert.token} reached $${currentPrice.toLocaleString()} (target: $${alert.targetPrice})`,
+        icon: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png'
+      });
+      alert.notified = true;
+      localStorage.setItem('oban_alerts', JSON.stringify(state.alerts));
+      showToast(`${alert.token} hit target price!`);
+    }  });
+}
+
+// ============ CONVERTER ============
+function calculateConversion(){
+  const from = document.getElementById('convertFrom').value;
+  const to = document.getElementById('convertTo').value;
+  const amount = parseFloat(document.getElementById('convertAmount').value) || 0;
+  
+  const fromPrice = state.prices[from]?.usd;
+  const toPrice = state.prices[to]?.usd;
+  
+  if(!fromPrice || !toPrice){
+    document.getElementById('convertResult').textContent = 'Price data unavailable';
+    return;
+  }
+  
+  const result = (amount * fromPrice) / toPrice;
+  document.getElementById('convertResult').textContent = 
+    `${amount.toLocaleString()} ${from} = ${result.toLocaleString(undefined, {maximumFractionDigits:6})} ${to}`;
+}
+
+function updateQuickStats(){
+  const stats = document.getElementById('quickStats');
+  if(!state.prices.BTC) return;
+  
+  stats.innerHTML = `
+    <div style="margin:5px 0">🟠 BTC Dominance: ~52%</div>
+    <div style="margin:5px 0">💎 ETH/BTC: ${(state.prices.ETH.usd/state.prices.BTC.usd).toFixed(4)}</div>
+    <div style="margin:5px 0">⚡ SOL/ETH: ${(state.prices.SOL.usd/state.prices.ETH.usd).toFixed(4)}</div>
+    <div style="margin:5px 0; font-size:11px; opacity:0.7">Data: CoinGecko</div>
+  `;
+}
+
+// ============ SETTINGS & DATA ============
+function toggleAutoRefresh(val){
+  state.autoRefresh = val;
+  showToast(`Auto-refresh ${val ? 'enabled' : 'disabled'}`);
+}
+
+function requestNotificationPermission(){
+  Notification.requestPermission().then(perm => {
+    showToast(perm === 'granted' ? 'Notifications enabled!' : 'Permission denied');
+  });
+}
+
+function exportData(){
+  const data = {
+    portfolio: state.portfolio,
+    alerts: state.alerts,    settings: {theme: state.theme, autoRefresh: state.autoRefresh}
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `oban-backup-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Config exported!');
+}
+
+function importData(input){
+  const file = input.files[0];
+  if(!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try{
+      const data = JSON.parse(e.target.result);
+      if(data.portfolio) state.portfolio = data.portfolio;
+      if(data.alerts) state.alerts = data.alerts;
+      if(data.settings?.theme) changeTheme(data.settings.theme);
+      if(data.settings?.autoRefresh !== undefined) state.autoRefresh = data.settings.autoRefresh;
+      
+      localStorage.setItem('oban_portfolio', JSON.stringify(state.portfolio));
+      localStorage.setItem('oban_alerts', JSON.stringify(state.alerts));
+      
+      renderPortfolio();
+      renderAlerts();
+      showToast('Config imported successfully!');
+      closeSettings();
+    }catch(err){
+      showToast('Invalid file format', 'error');
+    }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+function clearAllData(){
+  if(confirm('⚠️ Clear ALL data? This cannot be undone!')){
+    localStorage.clear();
+    location.reload();
+  }
+}
+
+// ============ KEYBOARD SHORTCUTS ============
+function setupKeyboardShortcuts(){
+  document.addEventListener('keydown', (e) => {    // Ctrl+K: Focus chat input
+    if(e.ctrlKey && e.key === 'k'){
+      e.preventDefault();
+      document.getElementById('prompt').focus();
+    }
+    // Ctrl+Enter: Send message
+    if(e.ctrlKey && e.key === 'Enter' && document.activeElement?.id === 'prompt'){
+      e.preventDefault();
+      sendAI();
+    }
+    // Esc: Clear input
+    if(e.key === 'Escape'){
+      if(document.activeElement?.id === 'prompt'){
+        document.getElementById('prompt').value = '';
+      }
+      closeSettings();
+    }
+    // Ctrl+T: Next tab (simple implementation)
+    if(e.ctrlKey && e.key === 't'){
+      e.preventDefault();
+      const tabs = Array.from(document.querySelectorAll('.tab'));
+      const active = document.querySelector('.tab.active');
+      const idx = tabs.indexOf(active);
+      tabs[(idx + 1) % tabs.length].click();
+    }
+  });
+}
+
+// ============ EVENT LISTENERS ============
+function setupEventListeners(){
+  // Auto-save API key on change
+  document.getElementById('apiKey').addEventListener('change', saveKey);
+  
+  // Send on Enter (without Ctrl) for single line
+  document.getElementById('prompt').addEventListener('keypress', (e) => {
+    if(e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      sendAI();
+    }
+  });
+  
+  // Refresh tokens when chain changes
+  document.getElementById('tokenChain').addEventListener('change', (e) => {
+    loadTokens(e.target.value);
+  });
+  
+  // Periodic updates
+  if(state.autoRefresh){
+    setInterval(() => {
+      loadPrices();      checkAlerts();
+    }, 30000); // 30 seconds
+  }
+}
+
+// ============ UTILS ============
+function copyToClipboard(text){
+  navigator.clipboard.writeText(text).then(() => {
+    showToast(`${text} copied to clipboard`);
+  });
+}
+
+// Initial load
+loadPrices();
 loadTokens();
-setInterval(loadTicker,20000);
-</script></body>
+setInterval(() => {
+  if(state.autoRefresh) {
+    loadPrices();
+    checkAlerts();
+  }
+}, 30000);
+</script>
+</body>
 </html>
