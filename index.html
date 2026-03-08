@@ -506,8 +506,8 @@ async function sendMsg() {
 
   renderMsg('user', msg);
 
-  // Deteksi apakah butuh web search
-  const needsSearch = /berita|terbaru|hari ini|sekarang|terkini|minggu ini|bulan ini|tahun ini|harga|saham|cuaca|current|latest|news|today|now|price|weather|2024|2025|2026/i.test(msg);
+  // Selalu search — agar semua jawaban berdasarkan data terkini
+  const needsSearch = true;
 
   let searchContext = '';
 
@@ -531,7 +531,7 @@ async function sendMsg() {
   renderTyping();
 
   const systemPrompt = 'Kamu adalah OBAN, asisten AI serba bisa. Jawab langsung tanpa basa-basi. Gunakan bahasa yang sama dengan pengguna (Indonesia atau Inggris).' +
-    (searchContext ? '\n\nGunakan data berikut untuk menjawab:\n' + searchContext : '');
+    (searchContext ? '\n\nPENTING: Gunakan data pencarian web berikut sebagai sumber utama jawaban. Jika data ini bertentangan dengan pengetahuanmu, PERCAYAI data ini karena lebih terkini.\n\n' + searchContext : '');
 
   const history = buildHistory();
 
