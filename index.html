@@ -206,13 +206,15 @@
 
   .send-btn {
     position: absolute; right: 10px; bottom: 10px;
-    width: 32px; height: 32px; background: var(--text);
+    width: 32px; height: 32px; background: #333;
     border: none; border-radius: 8px; cursor: pointer;
     display: flex; align-items: center; justify-content: center; transition: all 0.15s;
   }
-  .send-btn:hover { background: white; }
-  .send-btn:disabled { background: var(--surface); cursor: not-allowed; }
-  .send-btn svg { width: 14px; height: 14px; }
+  .send-btn:hover { background: #555; }
+  .send-btn.active { background: var(--text); cursor: pointer; }
+  .send-btn.active:hover { background: white; }
+  .send-btn svg { width: 14px; height: 14px; color: #666; }
+  .send-btn.active svg { color: #000; }
 
   .footer-note { text-align: center; font-size: 11px; color: var(--muted); margin-top: 10px; }
 
@@ -299,7 +301,7 @@
     <div class="input-wrap">
       <textarea class="input-box" id="inputBox" placeholder="Ketik pesan..." rows="1"
         onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
-      <button class="send-btn" id="sendBtn" onclick="sendMsg()" disabled>
+      <button class="send-btn" id="sendBtn" onclick="sendMsg()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
         </svg>
@@ -390,7 +392,7 @@ function newChat() {
   document.getElementById('welcome').style.display = 'flex';
   document.getElementById('inputBox').value = '';
   document.getElementById('inputBox').style.height = 'auto';
-  document.getElementById('sendBtn').disabled = true;
+  document.getElementById('sendBtn').classList.remove('active');
   renderSidebar();
   closeSidebar();
   document.getElementById('inputBox').focus();
@@ -516,7 +518,7 @@ async function sendMsg() {
   if (!activeChatId) { activeChatId = createChat(); renderSidebar(); }
 
   isLoading = true;
-  document.getElementById('sendBtn').disabled = true;
+  document.getElementById('sendBtn').classList.remove('active');
   document.getElementById('welcome').style.display = 'none';
   input.value = ''; input.style.height = 'auto';
 
@@ -578,7 +580,8 @@ async function sendMsg() {
   }
 
   isLoading = false;
-  document.getElementById('sendBtn').disabled = !input.value.trim();
+  if (input.value.trim()) document.getElementById('sendBtn').classList.add('active');
+  else document.getElementById('sendBtn').classList.remove('active');
   input.focus();
 }
 
@@ -623,7 +626,7 @@ async function generateFollowUps(userMsg, aiReply) {
         wrap.remove();
         document.getElementById('inputBox').value = q;
         autoResize(document.getElementById('inputBox'));
-        document.getElementById('sendBtn').disabled = false;
+        document.getElementById('sendBtn').classList.add('active');
         sendMsg();
       };
       wrap.appendChild(btn);
@@ -638,17 +641,23 @@ async function generateFollowUps(userMsg, aiReply) {
 //  INPUT LISTENER
 // ══════════════════════════
 document.getElementById('inputBox').addEventListener('input', () => {
-  document.getElementById('sendBtn').disabled = !document.getElementById('inputBox').value.trim() || isLoading;
+  const btn = document.getElementById('sendBtn');
+  if (document.getElementById('inputBox').value.trim() && !isLoading) {
+    btn.classList.add('active');
+  } else {
+    btn.classList.remove('active');
+  }
 });
 
 // ══════════════════════════
 //  BOOT
 // ══════════════════════════
 (function boot() {
+  document.getElementById('inputBox').removeAttribute('disabled');
+  document.getElementById('inputBox').focus();
   renderSidebar();
   const list = getChatList();
   if (list.length) openChat(list[0].id);
-  else document.getElementById('inputBox').focus();
 })();
 </script>
 </body>
