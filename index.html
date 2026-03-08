@@ -984,23 +984,56 @@ function renderMarketOverview(d) {
 // ── DEXSCREENER TOKENS ──
 async function loadTokens() {
   try {
-    const r = await fetch('https://api.dexscreener.com/latest/dex/pairs/solana');
-    const d = await r.json();
-    if (!d.pairs) return;
+    // Use token-boosts (trending) endpoint which is more reliable + has CORS support
+    // Then fetch top Solana pairs via search
+    const [trendRes, searchRes] = await Promise.allSettled([
+      fetch('https://api.dexscreener.com/token-boosts/top/v1'),
+      fetch('https://api.dexscreener.com/latest/dex/search?q=SOL')
+    ]);
 
-    // Sort by volume desc
-    allTokens = d.pairs
-      .filter(t => t.priceUsd && t.baseToken?.name)
-      .sort((a, b) => (b.volume?.h24 || 0) - (a.volume?.h24 || 0))
-      .slice(0, 30);
+    let pairs = [];
 
+    // Try search results first (has priceUsd, marketCap, volume)
+    if (searchRes.status === 'fulfilled' && searchRes.value.ok) {
+      const d = await searchRes.value.json();
+      if (d.pairs && d.pairs.length) {
+        pairs = d.pairs
+          .filter(t => t.chainId === 'solana' && t.priceUsd && t.baseToken?.name)
+          .sort((a, b) => (b.volume?.h24 || 0) - (a.volume?.h24 || 0));
+      }
+    }
+
+    // Fallback: try boosted tokens to get addresses, then fetch pair data
+    if (pairs.length === 0 && trendRes.status === 'fulfilled' && trendRes.value.ok) {
+      const boosts = await trendRes.value.json();
+      const solBoosts = (Array.isArray(boosts) ? boosts : [])
+        .filter(b => b.chainId === 'solana')
+        .slice(0, 15);
+
+      if (solBoosts.length > 0) {
+        const addresses = solBoosts.map(b => b.tokenAddress).join(',');
+        const pairRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${addresses}`);
+        if (pairRes.ok) {
+          const pd = await pairRes.json();
+          pairs = (pd.pairs || []).filter(t => t.priceUsd && t.baseToken?.name);
+        }
+      }
+    }
+
+    if (pairs.length === 0) {
+      document.getElementById('tokenList').innerHTML =
+        '<div class="loading-msg" style="color:var(--gold)">⚠ NO DATA — DEX API MAY BE RATE LIMITED<br><span style="font-size:10px;color:var(--muted)">Try clicking REFRESH in a moment</span></div>';
+      return;
+    }
+
+    allTokens = pairs.slice(0, 30);
     document.getElementById('tokenCount').textContent = allTokens.length;
     renderTokens(allTokens);
 
   } catch (e) {
     console.error(e);
     document.getElementById('tokenList').innerHTML =
-      '<div class="loading-msg" style="color:var(--red)">DEX FETCH FAILED</div>';
+      `<div class="loading-msg" style="color:var(--red)">⚠ DEX FETCH FAILED<br><span style="font-size:10px;color:var(--muted)">${e.message}</span></div>`;
   }
 }
 
@@ -1112,7 +1145,7 @@ async function sendAI() {
         'Authorization': 'Bearer ' + groqKey
       },
       body: JSON.stringify({
-        model: 'llama3-70b-8192',
+        model: 'llama-3.3-70b-versatile',
         messages: [
           {
             role: 'system',
