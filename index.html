@@ -981,59 +981,90 @@ function renderMarketOverview(d) {
   document.getElementById('marketOverview').innerHTML = html;
 }
 
-// ── DEXSCREENER TOKENS ──
+// ── TOKENS: CoinGecko (primary) + DexScreener (fallback) ──
 async function loadTokens() {
+  document.getElementById('tokenList').innerHTML = '<div class="loading-msg">SCANNING MARKETS</div>';
   try {
-    // Use token-boosts (trending) endpoint which is more reliable + has CORS support
-    // Then fetch top Solana pairs via search
-    const [trendRes, searchRes] = await Promise.allSettled([
-      fetch('https://api.dexscreener.com/token-boosts/top/v1'),
-      fetch('https://api.dexscreener.com/latest/dex/search?q=SOL')
-    ]);
+    // Primary: CoinGecko Solana ecosystem — real token names + market caps
+    const cgRes = await fetch(
+      'https://api.coingecko.com/api/v3/coins/markets' +
+      '?vs_currency=usd&category=solana-ecosystem' +
+      '&order=volume_desc&per_page=30&page=1' +
+      '&price_change_percentage=24h&sparkline=false'
+    );
+    if (!cgRes.ok) throw new Error('CG HTTP ' + cgRes.status);
+    const coins = await cgRes.json();
+    if (!Array.isArray(coins) || coins.length === 0) throw new Error('Empty');
 
-    let pairs = [];
+    allTokens = coins.map(c => ({
+      _source: 'coingecko',
+      name: c.name,
+      symbol: c.symbol?.toUpperCase(),
+      priceUsd: c.current_price,
+      marketCap: c.market_cap,
+      volume24h: c.total_volume,
+      change24h: c.price_change_percentage_24h,
+      cgId: c.id,
+      rank: c.market_cap_rank
+    }));
 
-    // Try search results first (has priceUsd, marketCap, volume)
-    if (searchRes.status === 'fulfilled' && searchRes.value.ok) {
-      const d = await searchRes.value.json();
-      if (d.pairs && d.pairs.length) {
-        pairs = d.pairs
-          .filter(t => t.chainId === 'solana' && t.priceUsd && t.baseToken?.name)
-          .sort((a, b) => (b.volume?.h24 || 0) - (a.volume?.h24 || 0));
-      }
-    }
-
-    // Fallback: try boosted tokens to get addresses, then fetch pair data
-    if (pairs.length === 0 && trendRes.status === 'fulfilled' && trendRes.value.ok) {
-      const boosts = await trendRes.value.json();
-      const solBoosts = (Array.isArray(boosts) ? boosts : [])
-        .filter(b => b.chainId === 'solana')
-        .slice(0, 15);
-
-      if (solBoosts.length > 0) {
-        const addresses = solBoosts.map(b => b.tokenAddress).join(',');
-        const pairRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${addresses}`);
-        if (pairRes.ok) {
-          const pd = await pairRes.json();
-          pairs = (pd.pairs || []).filter(t => t.priceUsd && t.baseToken?.name);
-        }
-      }
-    }
-
-    if (pairs.length === 0) {
-      document.getElementById('tokenList').innerHTML =
-        '<div class="loading-msg" style="color:var(--gold)">⚠ NO DATA — DEX API MAY BE RATE LIMITED<br><span style="font-size:10px;color:var(--muted)">Try clicking REFRESH in a moment</span></div>';
-      return;
-    }
-
-    allTokens = pairs.slice(0, 30);
     document.getElementById('tokenCount').textContent = allTokens.length;
     renderTokens(allTokens);
+    updateLastUpdate();
 
   } catch (e) {
-    console.error(e);
-    document.getElementById('tokenList').innerHTML =
-      `<div class="loading-msg" style="color:var(--red)">⚠ DEX FETCH FAILED<br><span style="font-size:10px;color:var(--muted)">${e.message}</span></div>`;
+    console.warn('CoinGecko failed:', e.message, '— trying DexScreener...');
+    try {
+      // Fallback: DexScreener boosted/trending Solana tokens
+      const boostRes = await fetch('https://api.dexscreener.com/token-boosts/top/v1');
+      if (!boostRes.ok) throw new Error('Boost HTTP ' + boostRes.status);
+      const boosts = await boostRes.json();
+
+      const solAddrs = (Array.isArray(boosts) ? boosts : [])
+        .filter(b => b.chainId === 'solana')
+        .slice(0, 10)
+        .map(b => b.tokenAddress)
+        .join(',');
+
+      if (!solAddrs) throw new Error('No Solana boosts');
+
+      const pairRes = await fetch('https://api.dexscreener.com/latest/dex/tokens/' + solAddrs);
+      if (!pairRes.ok) throw new Error('Pairs HTTP ' + pairRes.status);
+      const pd = await pairRes.json();
+
+      const seen = new Set();
+      allTokens = (pd.pairs || [])
+        .filter(p => {
+          const addr = p.baseToken?.address;
+          const isSol = p.baseToken?.symbol === 'SOL';
+          if (seen.has(addr) || isSol || !p.priceUsd) return false;
+          seen.add(addr);
+          return true;
+        })
+        .sort((a, b) => (b.volume?.h24 || 0) - (a.volume?.h24 || 0))
+        .map(p => ({
+          _source: 'dexscreener',
+          name: p.baseToken.name,
+          symbol: p.baseToken.symbol?.toUpperCase(),
+          priceUsd: parseFloat(p.priceUsd),
+          marketCap: p.marketCap || p.fdv || null,
+          volume24h: p.volume?.h24 || 0,
+          change24h: p.priceChange?.h24 || null,
+          pairAddress: p.pairAddress
+        }));
+
+      document.getElementById('tokenCount').textContent = allTokens.length;
+      renderTokens(allTokens);
+      updateLastUpdate();
+
+    } catch (e2) {
+      console.error('All token sources failed:', e2);
+      document.getElementById('tokenList').innerHTML =
+        `<div class="loading-msg" style="color:var(--red)">
+          ⚠ DATA UNAVAILABLE<br>
+          <span style="font-size:10px;color:var(--muted)">Rate limited — wait 60s then REFRESH</span>
+        </div>`;
+    }
   }
 }
 
@@ -1041,25 +1072,24 @@ function renderTokens(tokens) {
   let html = '';
   tokens.forEach((t, i) => {
     const price = fmtPrice(t.priceUsd);
+    const mcap = t.marketCap ? fmt(t.marketCap) : 'N/A';
+    const vol = t.volume24h ? fmt(t.volume24h) : '--';
+    const { text, cls } = fmtChange(t.change24h);
 
-    // Market cap: DexScreener provides fdv (fully diluted valuation) or marketCap
-    const mcapRaw = t.marketCap || t.fdv || null;
-    const mcap = mcapRaw ? fmt(mcapRaw) : 'N/A';
+    // Link: CoinGecko page or DexScreener pair
+    const link = t._source === 'coingecko'
+      ? `https://www.coingecko.com/en/coins/${t.cgId}`
+      : `https://dexscreener.com/solana/${t.pairAddress}`;
 
-    const vol = t.volume?.h24 ? fmt(t.volume.h24) : '--';
-    const chg = t.priceChange?.h24;
-    const { text, cls } = fmtChange(chg);
-
-    const name = t.baseToken?.name || 'Unknown';
-    const sym = t.baseToken?.symbol || '?';
-    const dex = t.dexId || 'dex';
+    const srcBadge = t._source === 'coingecko' ? 'CG' : 'DEX';
+    const rankLabel = t.rank ? `#${t.rank}` : `${i+1}`;
 
     html += `
-      <div class="token-row" onclick="window.open('https://dexscreener.com/solana/${t.pairAddress}','_blank')">
-        <div class="token-rank">${i + 1}</div>
+      <div class="token-row" onclick="window.open('${link}','_blank')">
+        <div class="token-rank">${rankLabel}</div>
         <div class="token-name-cell">
-          <b>${name}</b>
-          <span>${sym} · ${dex}</span>
+          <b>${t.name}</b>
+          <span>${t.symbol} · ${srcBadge}</span>
         </div>
         <div class="token-price">${price}</div>
         <div class="token-mcap">${mcap}</div>
