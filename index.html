@@ -581,7 +581,7 @@ async function sendMsg() {
   // history terakhir adalah pesan user yang baru saja disimpan
   // kirim semuanya ke API
   const apiMsgs = [
-    { role: 'system', content: 'Kamu adalah OBAN, asisten AI yang cerdas, ramah, dan serba bisa. Jawab dengan jelas dan natural. Gunakan bahasa yang sama dengan pengguna (Indonesia atau Inggris).' },
+    { role: 'system', content: 'Kamu adalah OBAN. Jawab langsung pertanyaan pengguna tanpa basa-basi, tanpa intro seperti "Halo! Saya siap membantu" atau "Tentu saja!". Langsung ke jawaban. Gunakan bahasa yang sama dengan pengguna (Indonesia atau Inggris). Jadilah ringkas, padat, dan tepat sasaran.' },
     ...history
   ];
 
