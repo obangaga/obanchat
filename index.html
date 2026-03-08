@@ -189,6 +189,7 @@
   .typing-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--muted2); animation: blink 1.2s infinite; }
   .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
   .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes spin { to { transform: rotate(360deg); } }
   @keyframes blink { 0%,60%,100% { opacity: 0.2; transform: scale(0.8); } 30% { opacity: 1; transform: scale(1); } }
 
   /* Input */
@@ -261,8 +262,10 @@
     <h2>Masukkan API Key</h2>
     <p>Dapatkan API key gratis di <a href="https://console.groq.com" target="_blank">console.groq.com</a>. Tersimpan lokal di browser kamu.</p>
     <input type="password" id="apiKeyInput" placeholder="gsk_..." autocomplete="off">
+    <div style="margin:0 0 4px;font-size:11px;color:var(--muted);letter-spacing:.04em">TAVILY API KEY <span style="color:#555">(opsional, untuk web search)</span></div>
+    <input type="password" id="tavilyInput" placeholder="tvly-..." autocomplete="off">
     <button class="modal-btn" onclick="initKey()">Mulai Chat</button>
-    <p class="modal-note">Key hanya dikirim langsung ke Groq, tidak ke server lain</p>
+    <p class="modal-note">Groq: <a href="https://console.groq.com" target="_blank">console.groq.com</a> &nbsp;|&nbsp; Tavily: <a href="https://tavily.com" target="_blank">tavily.com</a></p>
   </div>
 </div>
 
@@ -338,6 +341,7 @@
 //  STATE
 // ══════════════════════════
 let groqKey     = localStorage.getItem('oban_key') || '';
+let tavilyKey   = localStorage.getItem('oban_tavily') || '';
 let activeChatId = null;
 let isLoading   = false;
 
@@ -371,6 +375,8 @@ function initKey() {
   if (!key) return;
   groqKey = key;
   localStorage.setItem('oban_key', key);
+  const tv = document.getElementById('tavilyInput').value.trim();
+  if (tv) { tavilyKey = tv; localStorage.setItem('oban_tavily', tv); }
   document.getElementById('modalOverlay').style.display = 'none';
   setStatus(true);
   enableInput();
@@ -378,6 +384,7 @@ function initKey() {
 
 function showApiModal() {
   document.getElementById('apiKeyInput').value = groqKey;
+  document.getElementById('tavilyInput').value = tavilyKey;
   document.getElementById('modalOverlay').style.display = 'flex';
   setTimeout(() => document.getElementById('apiKeyInput').focus(), 100);
 }
@@ -575,6 +582,22 @@ function renderTyping() {
 // ══════════════════════════
 //  SEND
 // ══════════════════════════
+function showSearchStatus(query) {
+  const existing = document.getElementById('searchStatus');
+  if (existing) existing.remove();
+  const el = document.createElement('div');
+  el.id = 'searchStatus';
+  el.style.cssText = 'padding:10px 20px;font-size:12px;color:var(--muted2);font-family:Geist Mono,monospace;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;animation:fadeIn .2s ease';
+  el.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>' +
+    '<span>Mencari: ' + query + '</span>';
+  document.getElementById('messages').appendChild(el);
+  scrollBottom();
+}
+function hideSearchStatus() {
+  const el = document.getElementById('searchStatus');
+  if (el) el.remove();
+}
+
 async function sendMsg() {
   const input = document.getElementById('inputBox');
   const msg   = input.value.trim();
@@ -618,18 +641,113 @@ ATURAN WAJIB:
         model: 'llama-3.3-70b-versatile',
         messages: apiMsgs,
         max_tokens: 1024,
-        temperature: 0.7
+        temperature: 0.7,
+        tools: [{
+          type: 'function',
+          function: {
+            name: 'web_search',
+            description: 'Search the web for current news, events, prices, or any real-time information.',
+            parameters: {
+              type: 'object',
+              properties: {
+                query: { type: 'string', description: 'Search query' }
+              },
+              required: ['query']
+            }
+          }
+        }],
+        tool_choice: 'auto'
       })
     });
     const data = await res.json();
     document.getElementById('typingEl')?.remove();
+
     if (data.error) {
       renderMsg('ai', '⚠ Error: ' + data.error.message);
-    } else {
-      renderMsg('ai', data.choices[0].message.content);
+      isLoading = false;
+      document.getElementById('sendBtn').disabled = false;
+      return;
     }
+
+    const choice = data.choices[0];
+
+    // Model ingin search web
+    if (choice.finish_reason === 'tool_calls' || choice.message?.tool_calls?.length) {
+      const toolCall = choice.message.tool_calls[0];
+      const query = JSON.parse(toolCall.function.arguments).query;
+
+      // Tampilkan status searching
+      showSearchStatus(query);
+
+      // Lakukan web search via Tavily (free tier)
+      let searchResult = '';
+      try {
+        const sr = await fetch('https://api.tavily.com/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            api_key: tavilyKey || 'tvly-demo',
+            query: query,
+            search_depth: 'basic',
+            max_results: 5
+          })
+        });
+        const sd = await sr.json();
+        if (sd.results?.length) {
+          searchResult = sd.results.map(r =>
+            'Judul: ' + r.title + '
+URL: ' + r.url + '
+Isi: ' + (r.content || r.snippet || '')
+          ).join('
+
+');
+        } else {
+          searchResult = 'Tidak ada hasil ditemukan.';
+        }
+      } catch(se) {
+        searchResult = 'Web search gagal: ' + se.message;
+      }
+
+      hideSearchStatus();
+
+      // Kirim hasil search kembali ke model
+      const msgsWithTool = [
+        ...apiMsgs,
+        choice.message,
+        {
+          role: 'tool',
+          tool_call_id: toolCall.id,
+          content: searchResult
+        }
+      ];
+
+      renderTyping();
+      const res2 = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + groqKey },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          messages: msgsWithTool,
+          max_tokens: 1024,
+          temperature: 0.7
+        })
+      });
+      const data2 = await res2.json();
+      document.getElementById('typingEl')?.remove();
+      if (data2.error) {
+        renderMsg('ai', '⚠ Error: ' + data2.error.message);
+      } else {
+        renderMsg('ai', data2.choices[0].message.content);
+      }
+
+    } else {
+      // Jawab langsung tanpa search
+      renderMsg('ai', choice.message.content);
+    }
+
   } catch(e) {
     document.getElementById('typingEl')?.remove();
+    hideSearchStatus();
     renderMsg('ai', '⚠ Koneksi gagal. Cek internet dan API key kamu.');
   }
 
