@@ -216,6 +216,22 @@
 
   .footer-note { text-align: center; font-size: 11px; color: var(--muted); margin-top: 10px; }
 
+  .followups {
+    max-width: 680px; margin: 0 auto;
+    padding: 10px 20px 16px;
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .followup-btn {
+    background: transparent;
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px; color: var(--muted2);
+    cursor: pointer; font-family: 'Geist', sans-serif;
+    transition: all 0.15s; text-align: left; line-height: 1.4;
+  }
+  .followup-btn:hover { border-color: #444; color: var(--text); background: var(--hover); }
+
   .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; }
 
   @media (max-width: 640px) {
@@ -551,7 +567,10 @@ async function sendMsg() {
     if (data.error) {
       renderMsg('ai', '⚠ Error: ' + (data.error.message || data.error));
     } else {
-      renderMsg('ai', data.choices[0].message.content);
+      const reply = data.choices[0].message.content;
+      renderMsg('ai', reply);
+      // Generate follow-up questions
+      generateFollowUps(msg, reply);
     }
   } catch(e) {
     document.getElementById('typingEl')?.remove();
@@ -561,6 +580,58 @@ async function sendMsg() {
   isLoading = false;
   document.getElementById('sendBtn').disabled = !input.value.trim();
   input.focus();
+}
+
+async function generateFollowUps(userMsg, aiReply) {
+  // Remove previous follow-ups
+  document.getElementById('followupsEl')?.remove();
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'chat',
+        messages: [
+          { role: 'system', content: 'Berikan TEPAT 3 pertanyaan follow-up singkat yang relevan berdasarkan percakapan. Format: hanya 3 baris, setiap baris 1 pertanyaan, tanpa nomor, tanpa penjelasan. Maksimal 8 kata per pertanyaan. Gunakan bahasa yang sama dengan pengguna.' },
+          { role: 'user', content: userMsg },
+          { role: 'assistant', content: aiReply },
+          { role: 'user', content: 'Berikan 3 pertanyaan follow-up singkat.' }
+        ]
+      })
+    });
+    const data = await res.json();
+    if (data.error || !data.choices) return;
+
+    const questions = data.choices[0].message.content
+      .split('
+')
+      .map(q => q.replace(/^[-•*\d.]+\s*/, '').trim())
+      .filter(q => q.length > 3 && q.length < 80)
+      .slice(0, 3);
+
+    if (!questions.length) return;
+
+    const wrap = document.createElement('div');
+    wrap.id = 'followupsEl';
+    wrap.className = 'followups';
+    questions.forEach(q => {
+      const btn = document.createElement('button');
+      btn.className = 'followup-btn';
+      btn.textContent = q;
+      btn.onclick = () => {
+        wrap.remove();
+        document.getElementById('inputBox').value = q;
+        autoResize(document.getElementById('inputBox'));
+        document.getElementById('sendBtn').disabled = false;
+        sendMsg();
+      };
+      wrap.appendChild(btn);
+    });
+
+    document.getElementById('messages').appendChild(wrap);
+    scrollBottom();
+  } catch(e) { /* silent fail */ }
 }
 
 // ══════════════════════════
