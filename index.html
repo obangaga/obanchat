@@ -33,14 +33,11 @@
     overflow: hidden;
   }
 
-  /* ══ SIDEBAR ══ */
   .sidebar {
-    width: 256px;
-    flex-shrink: 0;
+    width: 256px; flex-shrink: 0;
     background: var(--sidebar);
     border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
+    display: flex; flex-direction: column;
     height: 100dvh;
     transition: transform 0.25s ease;
   }
@@ -57,11 +54,10 @@
 
   .new-chat-btn {
     width: 100%; display: flex; align-items: center; gap: 9px;
-    padding: 9px 12px;
-    background: transparent; border: 1px solid var(--border2);
-    border-radius: 8px; color: var(--text);
-    font-family: 'Geist', sans-serif; font-size: 13px;
-    cursor: pointer; transition: all 0.15s; text-align: left;
+    padding: 9px 12px; background: transparent;
+    border: 1px solid var(--border2); border-radius: 8px;
+    color: var(--text); font-family: 'Geist', sans-serif;
+    font-size: 13px; cursor: pointer; transition: all 0.15s;
   }
   .new-chat-btn:hover { background: var(--hover); border-color: #3a3a3a; }
 
@@ -71,8 +67,8 @@
 
   .section-label {
     font-size: 11px; color: var(--muted);
-    padding: 10px 8px 4px;
-    letter-spacing: 0.05em; font-family: 'Geist Mono', monospace;
+    padding: 10px 8px 4px; letter-spacing: 0.05em;
+    font-family: 'Geist Mono', monospace;
   }
 
   .chat-item {
@@ -85,7 +81,7 @@
 
   .chat-item-title {
     flex: 1; font-size: 13px; color: var(--muted2);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .chat-item.active .chat-item-title { color: var(--text); }
 
@@ -102,17 +98,16 @@
     border-top: 1px solid var(--border); flex-shrink: 0;
   }
 
-  .api-row {
+  .sb-row {
     display: flex; align-items: center; gap: 8px;
     padding: 8px 10px; border-radius: 7px;
-    cursor: pointer; font-size: 12px; color: var(--muted2);
+    cursor: pointer; font-size: 12px; color: var(--muted);
     transition: background 0.12s;
   }
-  .api-row:hover { background: var(--hover); }
-  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
-  .status-dot.ok { background: #4ade80; box-shadow: 0 0 6px rgba(74,222,128,0.4); }
+  .sb-row:hover { background: var(--hover); color: var(--muted2); }
 
-  /* ══ MAIN ══ */
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 6px rgba(74,222,128,0.4); flex-shrink: 0; }
+
   .main { flex: 1; display: flex; flex-direction: column; height: 100dvh; overflow: hidden; min-width: 0; }
 
   .topbar {
@@ -123,7 +118,6 @@
   .menu-btn {
     display: none; background: transparent; border: none;
     color: var(--muted2); cursor: pointer; padding: 4px; border-radius: 6px;
-    align-items: center; justify-content: center;
   }
 
   .topbar-logo {
@@ -136,7 +130,6 @@
   .chat-area::-webkit-scrollbar { width: 4px; }
   .chat-area::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
-  /* Welcome */
   .welcome {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     min-height: 100%; padding: 40px 20px; text-align: center; gap: 6px;
@@ -158,7 +151,6 @@
   }
   .suggestion:hover { border-color: #3a3a3a; color: var(--text); background: var(--hover); }
 
-  /* Messages */
   .messages { padding: 0; }
 
   .msg-wrapper {
@@ -185,14 +177,20 @@
   .msg-text pre { background: #111; border: 1px solid var(--border2); border-radius: 8px; padding: 14px; overflow-x: auto; margin: 10px 0; }
   .msg-text pre code { background: none; border: none; padding: 0; font-size: 13px; line-height: 1.6; }
 
+  .search-indicator {
+    max-width: 680px; margin: 0 auto;
+    padding: 8px 20px; font-size: 12px; color: var(--muted2);
+    font-family: 'Geist Mono', monospace;
+    display: flex; align-items: center; gap: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
   .typing-dots { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
   .typing-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--muted2); animation: blink 1.2s infinite; }
   .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
   .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes spin { to { transform: rotate(360deg); } }
   @keyframes blink { 0%,60%,100% { opacity: 0.2; transform: scale(0.8); } 30% { opacity: 1; transform: scale(1); } }
 
-  /* Input */
   .input-area { flex-shrink: 0; padding: 14px 20px 18px; border-top: 1px solid var(--border); }
   .input-wrap { max-width: 680px; margin: 0 auto; position: relative; }
 
@@ -218,32 +216,6 @@
 
   .footer-note { text-align: center; font-size: 11px; color: var(--muted); margin-top: 10px; }
 
-  /* Modal */
-  .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.75);
-    backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center;
-    z-index: 200; padding: 20px;
-  }
-  .modal { background: #161616; border: 1px solid var(--border2); border-radius: 14px; padding: 28px; width: 100%; max-width: 360px; }
-  .modal h2 { font-size: 17px; font-weight: 500; margin-bottom: 6px; }
-  .modal p  { font-size: 13px; color: var(--muted2); margin-bottom: 18px; line-height: 1.6; }
-  .modal input {
-    width: 100%; background: var(--bg); border: 1px solid var(--border2); border-radius: 8px;
-    padding: 11px 14px; font-family: 'Geist Mono', monospace; font-size: 13px;
-    color: var(--text); outline: none; margin-bottom: 12px; transition: border-color 0.15s;
-  }
-  .modal input:focus { border-color: #444; }
-  .modal input::placeholder { color: var(--muted); }
-  .modal-btn {
-    width: 100%; background: var(--text); color: var(--bg); border: none; border-radius: 8px;
-    padding: 11px; font-family: 'Geist', sans-serif; font-size: 14px; font-weight: 500;
-    cursor: pointer; transition: all 0.15s;
-  }
-  .modal-btn:hover { background: white; }
-  .modal-note { font-size: 11px; color: var(--muted); text-align: center; margin-top: 10px; }
-  .modal-note a { color: var(--muted2); }
-
-  /* Mobile */
   .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; }
 
   @media (max-width: 640px) {
@@ -256,22 +228,8 @@
 </head>
 <body>
 
-<!-- MODAL -->
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal">
-    <h2>Masukkan API Key</h2>
-    <p>Dapatkan API key gratis di <a href="https://console.groq.com" target="_blank">console.groq.com</a>. Tersimpan lokal di browser kamu.</p>
-    <input type="password" id="apiKeyInput" placeholder="gsk_..." autocomplete="off">
-    <div style="margin:0 0 4px;font-size:11px;color:var(--muted);letter-spacing:.04em">TAVILY API KEY <span style="color:#555">(opsional, untuk web search)</span></div>
-    <input type="password" id="tavilyInput" placeholder="tvly-..." autocomplete="off">
-    <button class="modal-btn" onclick="initKey()">Mulai Chat</button>
-    <p class="modal-note">Groq: <a href="https://console.groq.com" target="_blank">console.groq.com</a> &nbsp;|&nbsp; Tavily: <a href="https://tavily.com" target="_blank">tavily.com</a></p>
-  </div>
-</div>
-
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
-<!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-top">
     <div class="logo">OBAN <span>Chat</span></div>
@@ -284,21 +242,20 @@
   </div>
   <div class="chat-list-wrap" id="chatListWrap"></div>
   <div class="sidebar-bottom">
-    <div class="api-row" onclick="showApiModal()">
-      <div class="status-dot" id="statusDot"></div>
-      <span id="statusLabel">Belum terhubung</span>
+    <div class="sb-row">
+      <div class="status-dot"></div>
+      <span>OBAN 1.1 · Online</span>
     </div>
-    <div class="api-row" onclick="clearAllChats()" style="color:var(--muted);font-size:12px">
+    <div class="sb-row" onclick="clearAllChats()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
       Hapus semua riwayat
     </div>
   </div>
 </aside>
 
-<!-- MAIN -->
 <div class="main">
   <div class="topbar">
-    <button class="menu-btn" id="menuBtn" onclick="toggleSidebar()">
+    <button class="menu-btn" onclick="toggleSidebar()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
       </svg>
@@ -325,7 +282,7 @@
   <div class="input-area">
     <div class="input-wrap">
       <textarea class="input-box" id="inputBox" placeholder="Ketik pesan..." rows="1"
-        onkeydown="handleKey(event)" oninput="autoResize(this)" disabled></textarea>
+        onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
       <button class="send-btn" id="sendBtn" onclick="sendMsg()" disabled>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
@@ -340,52 +297,12 @@
 // ══════════════════════════
 //  STATE
 // ══════════════════════════
-let groqKey     = localStorage.getItem('oban_key') || '';
-let tavilyKey   = localStorage.getItem('oban_tavily') || '';
 let activeChatId = null;
-let isLoading   = false;
+let isLoading    = false;
 
-function getChats()       { try { return JSON.parse(localStorage.getItem('oban_chats') || '{}'); } catch { return {}; } }
-function saveChats(c)     { try { localStorage.setItem('oban_chats', JSON.stringify(c)); } catch {} }
-function getChatList()    { return Object.values(getChats()).sort((a,b) => b.updatedAt - a.updatedAt); }
-
-document.getElementById('inputBox').addEventListener('input', () => {
-  document.getElementById('sendBtn').disabled = !document.getElementById('inputBox').value.trim() || isLoading;
-});
-
-// ══════════════════════════
-//  API KEY
-// ══════════════════════════
-function initKey() {
-  const key = document.getElementById('apiKeyInput').value.trim();
-  if (!key) return;
-  groqKey = key;
-  localStorage.setItem('oban_key', key);
-  const tv = document.getElementById('tavilyInput').value.trim();
-  if (tv) { tavilyKey = tv; localStorage.setItem('oban_tavily', tv); }
-  document.getElementById('modalOverlay').style.display = 'none';
-  setStatus(true);
-  enableInput();
-}
-
-function showApiModal() {
-  document.getElementById('apiKeyInput').value = groqKey;
-  document.getElementById('tavilyInput').value = tavilyKey;
-  document.getElementById('modalOverlay').style.display = 'flex';
-  setTimeout(() => document.getElementById('apiKeyInput').focus(), 100);
-}
-
-function setStatus(ok) {
-  document.getElementById('statusDot').className   = 'status-dot' + (ok ? ' ok' : '');
-  document.getElementById('statusLabel').textContent = ok ? 'API terhubung' : 'Belum terhubung';
-}
-
-function enableInput() {
-  document.getElementById('inputBox').disabled = false;
-  document.getElementById('inputBox').focus();
-}
-
-document.getElementById('apiKeyInput').addEventListener('keydown', e => { if (e.key === 'Enter') initKey(); });
+function getChats()    { try { return JSON.parse(localStorage.getItem('oban_chats') || '{}'); } catch { return {}; } }
+function saveChats(c)  { try { localStorage.setItem('oban_chats', JSON.stringify(c)); } catch {} }
+function getChatList() { return Object.values(getChats()).sort((a,b) => b.updatedAt - a.updatedAt); }
 
 // ══════════════════════════
 //  SIDEBAR
@@ -412,7 +329,7 @@ function renderSidebar() {
     items.forEach(c => {
       html += '<div class="chat-item ' + (c.id === activeChatId ? 'active' : '') + '" onclick="openChat(\'' + c.id + '\')">' +
         '<div class="chat-item-title">' + escHtml(c.title) + '</div>' +
-        '<button class="chat-item-del" onclick="deleteChat(event,\'' + c.id + '\')" title="Hapus">\xd7</button>' +
+        '<button class="chat-item-del" onclick="deleteChat(event,\'' + c.id + '\')">\xd7</button>' +
         '</div>';
     });
   });
@@ -445,13 +362,9 @@ function openChat(id) {
   const chat = getChats()[id];
   if (!chat) return;
   document.getElementById('messages').innerHTML = '';
-  if (chat.messages.length === 0) {
-    document.getElementById('welcome').style.display = 'flex';
-  } else {
-    document.getElementById('welcome').style.display = 'none';
-    chat.messages.forEach(m => renderMsg(m.role, m.text, false));
-    scrollBottom();
-  }
+  document.getElementById('welcome').style.display = chat.messages.length ? 'none' : 'flex';
+  chat.messages.forEach(m => renderMsg(m.role, m.text, false));
+  if (chat.messages.length) scrollBottom();
   renderSidebar();
 }
 
@@ -464,19 +377,7 @@ function newChat() {
   document.getElementById('sendBtn').disabled = true;
   renderSidebar();
   closeSidebar();
-  if (groqKey) document.getElementById('inputBox').focus();
-}
-
-function clearAllChats() {
-  if (!confirm('Hapus semua riwayat chat?')) return;
-  localStorage.removeItem('oban_chats');
-  activeChatId = null;
-  document.getElementById('messages').innerHTML = '';
-  document.getElementById('welcome').style.display = 'flex';
-  document.getElementById('inputBox').value = '';
-  document.getElementById('sendBtn').disabled = true;
-  renderSidebar();
-  closeSidebar();
+  document.getElementById('inputBox').focus();
 }
 
 function deleteChat(e, id) {
@@ -488,6 +389,16 @@ function deleteChat(e, id) {
   else renderSidebar();
 }
 
+function clearAllChats() {
+  if (!confirm('Hapus semua riwayat chat?')) return;
+  localStorage.removeItem('oban_chats');
+  activeChatId = null;
+  document.getElementById('messages').innerHTML = '';
+  document.getElementById('welcome').style.display = 'flex';
+  renderSidebar();
+  closeSidebar();
+}
+
 function saveMessage(role, text) {
   if (!activeChatId) return;
   const chats = getChats();
@@ -495,13 +406,12 @@ function saveMessage(role, text) {
   if (!chat) return;
   chat.messages.push({ role, text });
   chat.updatedAt = Date.now();
-  // Auto title dari pesan pertama user
   if (role === 'user' && chat.title === 'Chat Baru')
     chat.title = text.length > 45 ? text.slice(0, 45) + '…' : text;
   saveChats(chats);
 }
 
-function buildApiHistory() {
+function buildHistory() {
   if (!activeChatId) return [];
   const chat = getChats()[activeChatId];
   if (!chat) return [];
@@ -515,11 +425,10 @@ function buildApiHistory() {
 //  HELPERS
 // ══════════════════════════
 function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 160) + 'px'; }
-function handleKey(e)    { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } }
-function suggest(el)     { document.getElementById('inputBox').value = el.textContent; autoResize(document.getElementById('inputBox')); document.getElementById('sendBtn').disabled = false; sendMsg(); }
-function scrollBottom()  { setTimeout(() => { document.getElementById('chatArea').scrollTop = 9999999; }, 50); }
-
-function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function handleKey(e)   { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } }
+function suggest(el)    { document.getElementById('inputBox').value = el.textContent; autoResize(document.getElementById('inputBox')); document.getElementById('sendBtn').disabled = false; sendMsg(); }
+function scrollBottom() { setTimeout(() => { document.getElementById('chatArea').scrollTop = 999999; }, 50); }
+function escHtml(s)     { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 function formatText(t) {
   t = t.replace(/```(\w*)\n?([\s\S]*?)```/g, (_,l,c) => '<pre><code>' + escHtml(c.trim()) + '</code></pre>');
@@ -565,30 +474,28 @@ function renderTyping() {
   scrollBottom();
 }
 
-// ══════════════════════════
-//  SEND
-// ══════════════════════════
-function showSearchStatus(query) {
-  const existing = document.getElementById('searchStatus');
-  if (existing) existing.remove();
+function showSearching(q) {
   const el = document.createElement('div');
-  el.id = 'searchStatus';
-  el.style.cssText = 'padding:10px 20px;font-size:12px;color:var(--muted2);font-family:Geist Mono,monospace;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;animation:fadeIn .2s ease';
-  el.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>' +
-    '<span>Mencari: ' + query + '</span>';
+  el.id = 'searchEl'; el.className = 'msg-wrapper';
+  el.style.background = 'transparent';
+  el.innerHTML = '<div class="search-indicator">' +
+    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>' +
+    'Mencari: ' + escHtml(q) + '</div>';
   document.getElementById('messages').appendChild(el);
   scrollBottom();
 }
-function hideSearchStatus() {
-  const el = document.getElementById('searchStatus');
-  if (el) el.remove();
+
+function hideSearching() {
+  document.getElementById('searchEl')?.remove();
 }
 
+// ══════════════════════════
+//  SEND
+// ══════════════════════════
 async function sendMsg() {
   const input = document.getElementById('inputBox');
   const msg   = input.value.trim();
   if (!msg || isLoading) return;
-  if (!groqKey) { showApiModal(); return; }
 
   if (!activeChatId) { activeChatId = createChat(); renderSidebar(); }
 
@@ -599,45 +506,56 @@ async function sendMsg() {
 
   renderMsg('user', msg);
 
-  // Detect apakah perlu web search
-  const needsSearch = /berita|terbaru|hari ini|sekarang|terkini|minggu ini|bulan ini|tahun ini|harga|current|latest|news|today|now|2024|2025|2026/i.test(msg);
+  // Deteksi apakah butuh web search
+  const needsSearch = /berita|terbaru|hari ini|sekarang|terkini|minggu ini|bulan ini|tahun ini|harga|saham|cuaca|current|latest|news|today|now|price|weather|2024|2025|2026/i.test(msg);
 
-  if (needsSearch && tavilyKey) {
-    showSearchStatus('Mencari informasi terkini...');
-    let searchContext = '';
+  let searchContext = '';
+
+  if (needsSearch) {
+    showSearching(msg);
     try {
-      const sr = await fetch('https://api.tavily.com/search', {
+      const sr = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ api_key: tavilyKey, query: msg, search_depth: 'basic', max_results: 5 })
+        body: JSON.stringify({ action: 'search', query: msg })
       });
       const sd = await sr.json();
       if (sd.results && sd.results.length) {
-        searchContext = 'Berikut hasil pencarian web terkini:
-
-' +
-          sd.results.map((r,i) => (i+1) + '. ' + r.title + '
-' + (r.content || r.snippet || '') + '
-Sumber: ' + r.url).join('
-
-');
+        searchContext = 'Hasil pencarian web terkini:\n\n' +
+          sd.results.map((r, i) => (i+1) + '. ' + r.title + '\n' + (r.content || r.snippet || '') + '\nSumber: ' + r.url).join('\n\n');
       }
-    } catch(e) { console.warn('Search failed:', e); }
-    hideSearchStatus();
+    } catch(e) { console.warn('Search error:', e); }
+    hideSearching();
+  }
 
-    if (searchContext) {
-      renderTyping();
-      await callGroq(buildApiHistory(), searchContext);
-      document.getElementById('typingEl')?.remove();
-    } else {
-      renderTyping();
-      await callGroq(buildApiHistory(), '');
-      document.getElementById('typingEl')?.remove();
-    }
-  } else {
-    renderTyping();
-    await callGroq(buildApiHistory(), '');
+  renderTyping();
+
+  const systemPrompt = 'Kamu adalah OBAN, asisten AI serba bisa. Jawab langsung tanpa basa-basi. Gunakan bahasa yang sama dengan pengguna (Indonesia atau Inggris).' +
+    (searchContext ? '\n\nGunakan data berikut untuk menjawab:\n' + searchContext : '');
+
+  const history = buildHistory();
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'chat',
+        messages: [{ role: 'system', content: systemPrompt }, ...history]
+      })
+    });
+
+    const data = await res.json();
     document.getElementById('typingEl')?.remove();
+
+    if (data.error) {
+      renderMsg('ai', '⚠ Error: ' + (data.error.message || data.error));
+    } else {
+      renderMsg('ai', data.choices[0].message.content);
+    }
+  } catch(e) {
+    document.getElementById('typingEl')?.remove();
+    renderMsg('ai', '⚠ Koneksi gagal: ' + e.message);
   }
 
   isLoading = false;
@@ -645,54 +563,23 @@ Sumber: ' + r.url).join('
   input.focus();
 }
 
-async function callGroq(history, searchContext) {
-  const systemContent = `Kamu adalah OBAN, asisten AI serba bisa. Jawab langsung tanpa basa-basi.
-Gunakan bahasa yang sama dengan pengguna (Indonesia atau Inggris).
-Jika ada hasil pencarian web di bawah ini, gunakan untuk menjawab dengan informasi terkini.${searchContext ? '
-
-KONTEKS WEB:
-' + searchContext : ''}`;
-
-  try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + groqKey },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        messages: [ { role: 'system', content: systemContent }, ...history ],
-        max_tokens: 1024,
-        temperature: 0.7
-      })
-    });
-    const data = await res.json();
-    if (data.error) {
-      renderMsg('ai', '⚠ Error: ' + data.error.message);
-    } else {
-      renderMsg('ai', data.choices[0].message.content);
-    }
-  } catch(e) {
-    renderMsg('ai', '⚠ Koneksi gagal: ' + e.message);
-  }
-}
-
+// ══════════════════════════
+//  INPUT LISTENER
+// ══════════════════════════
+document.getElementById('inputBox').addEventListener('input', () => {
+  document.getElementById('sendBtn').disabled = !document.getElementById('inputBox').value.trim() || isLoading;
+});
 
 // ══════════════════════════
-//  BOOT — runs after all functions defined
+//  BOOT
 // ══════════════════════════
 (function boot() {
-  if (groqKey) {
-    document.getElementById('modalOverlay').style.display = 'none';
-    setStatus(true);
-    enableInput();
-  }
-  if (tavilyKey) {
-    const dot = document.getElementById('searchDot');
-    if (dot) dot.classList.add('ok');
-  }
   renderSidebar();
   const list = getChatList();
   if (list.length) openChat(list[0].id);
+  else document.getElementById('inputBox').focus();
 })();
 </script>
 </body>
 </html>
+
