@@ -490,12 +490,49 @@
 <script>
 let groqKey = localStorage.getItem('oban_groq_key') || '';
 let history = [];
+let messages = [];
 let isLoading = false;
+
+const STORAGE_KEY = 'oban_chat_history';
+
+// ── SIMPAN & LOAD ──
+function saveChat() {
+  try {
+    // Simpan max 100 pesan terakhir
+    const toSave = { messages: messages.slice(-100), history: history.slice(-40) };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+  } catch(e) { console.warn('Save failed:', e); }
+}
+
+function loadChat() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const saved = JSON.parse(raw);
+    if (!saved.messages?.length) return false;
+    messages = saved.messages;
+    history  = saved.history || [];
+    return true;
+  } catch { return false; }
+}
+
+function clearChat() {
+  messages = [];
+  history  = [];
+  localStorage.removeItem(STORAGE_KEY);
+}
 
 // ── INIT ──
 if (groqKey) {
   document.getElementById('modalOverlay').style.display = 'none';
   enableInput();
+}
+
+// Restore chat saat page load
+if (loadChat()) {
+  document.getElementById('welcome').style.display = 'none';
+  messages.forEach(m => renderMsg(m.role, m.text, false));
+  scrollBottom();
 }
 
 document.getElementById('inputBox').addEventListener('input', () => {
@@ -542,7 +579,8 @@ function suggest(el) {
 }
 
 function newChat() {
-  history = [];
+  if (messages.length && !confirm('Hapus semua chat ini?')) return;
+  clearChat();
   document.getElementById('messages').innerHTML = '';
   document.getElementById('welcome').style.display = 'flex';
   document.getElementById('inputBox').value = '';
@@ -556,25 +594,30 @@ function scrollBottom() {
 }
 
 // ── RENDER ──
-function renderMsg(role, text) {
+function renderMsg(role, text, save = true) {
   document.getElementById('welcome').style.display = 'none';
 
   const wrap = document.createElement('div');
-  wrap.className = `msg-wrapper ${role}`;
-
+  wrap.className = 'msg-wrapper ' + role;
   const isAI = role === 'ai';
   const formatted = isAI ? formatText(text) : escHtml(text);
 
-  wrap.innerHTML = `
-    <div class="msg-inner">
-      <div class="avatar ${isAI ? 'ai-av' : 'user-av'}">${isAI ? '✦' : 'U'}</div>
-      <div class="msg-content">
-        <div class="msg-role">${isAI ? 'OBAN' : 'You'}</div>
-        <div class="msg-text">${formatted}</div>
-      </div>
-    </div>`;
+  wrap.innerHTML =
+    '<div class="msg-inner">' +
+      '<div class="avatar ' + (isAI ? 'ai-av' : 'user-av') + '">' + (isAI ? '\u2726' : 'U') + '</div>' +
+      '<div class="msg-content">' +
+        '<div class="msg-role">' + (isAI ? 'OBAN' : 'You') + '</div>' +
+        '<div class="msg-text">' + formatted + '</div>' +
+      '</div>' +
+    '</div>';
 
   document.getElementById('messages').appendChild(wrap);
+
+  if (save) {
+    messages.push({ role, text });
+    saveChat();
+  }
+
   scrollBottom();
   return wrap;
 }
@@ -584,14 +627,14 @@ function renderTyping() {
   const wrap = document.createElement('div');
   wrap.className = 'msg-wrapper ai';
   wrap.id = 'typingIndicator';
-  wrap.innerHTML = `
-    <div class="msg-inner">
-      <div class="avatar ai-av">✦</div>
-      <div class="msg-content">
-        <div class="msg-role">OBAN</div>
-        <div class="typing-dots"><span></span><span></span><span></span></div>
-      </div>
-    </div>`;
+  wrap.innerHTML =
+    '<div class="msg-inner">' +
+      '<div class="avatar ai-av">\u2726</div>' +
+      '<div class="msg-content">' +
+        '<div class="msg-role">OBAN</div>' +
+        '<div class="typing-dots"><span></span><span></span><span></span></div>' +
+      '</div>' +
+    '</div>';
   document.getElementById('messages').appendChild(wrap);
   scrollBottom();
 }
@@ -601,16 +644,11 @@ function escHtml(s) {
 }
 
 function formatText(text) {
-  // Code blocks
-  text = text.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) =>
-    `<pre><code>${escHtml(code.trim())}</code></pre>`
-  );
-  // Inline code
+  text = text.replace(/```(\w*)\n?([\s\S]*?)```/g, function(_, lang, code) {
+    return '<pre><code>' + escHtml(code.trim()) + '</code></pre>';
+  });
   text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
-  // Bold
   text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-  // Escape remaining HTML in non-code parts (simple)
-  // Line breaks
   text = text.replace(/\n/g, '<br>');
   return text;
 }
@@ -642,7 +680,7 @@ async function sendMsg() {
         model: 'llama-3.3-70b-versatile',
         messages: [
           { role: 'system', content: 'Kamu adalah OBAN, asisten AI yang cerdas, ramah, dan serba bisa. Jawab dengan jelas dan natural. Gunakan bahasa yang sama dengan pengguna (Indonesia atau Inggris).' },
-          ...history
+          ...history.slice(-20)
         ],
         max_tokens: 1024,
         temperature: 0.7
@@ -650,10 +688,11 @@ async function sendMsg() {
     });
 
     const data = await res.json();
-    document.getElementById('typingIndicator')?.remove();
+    const ti = document.getElementById('typingIndicator');
+    if (ti) ti.remove();
 
     if (data.error) {
-      renderMsg('ai', `⚠ Error: ${data.error.message}`);
+      renderMsg('ai', '\u26a0 Error: ' + data.error.message);
       isLoading = false;
       document.getElementById('sendBtn').disabled = false;
       return;
@@ -661,16 +700,17 @@ async function sendMsg() {
 
     const reply = data.choices[0].message.content;
     history.push({ role: 'assistant', content: reply });
+    if (history.length > 40) history = history.slice(-40);
     renderMsg('ai', reply);
 
   } catch (e) {
-    document.getElementById('typingIndicator')?.remove();
-    renderMsg('ai', '⚠ Koneksi gagal. Cek API key dan internet kamu.');
+    const ti = document.getElementById('typingIndicator');
+    if (ti) ti.remove();
+    renderMsg('ai', '\u26a0 Koneksi gagal. Cek API key dan internet kamu.');
   }
 
   isLoading = false;
-  const val = document.getElementById('inputBox').value.trim();
-  document.getElementById('sendBtn').disabled = !val;
+  document.getElementById('sendBtn').disabled = !document.getElementById('inputBox').value.trim();
   document.getElementById('inputBox').focus();
 }
 </script>
