@@ -1,189 +1,176 @@
-<!DOCTYPE html><html lang="id">
+<!DOCTYPE html><html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OBAN AI TERMINAL</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<title>OBAN TERMINAL PRO</title>
 <style>
-:root{--cyan:#00fff7;--bg:#050a0e;--panel:#08131a}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--cyan);font-family:'Share Tech Mono',monospace;height:100vh;display:flex;flex-direction:column}
-.header{font-family:Orbitron,monospace;text-align:center;padding:14px;border-bottom:1px solid rgba(0,255,247,.2);letter-spacing:5px}
-.tabs{display:flex;border-bottom:1px solid rgba(0,255,247,.15)}
-.tab{flex:1;padding:10px;text-align:center;cursor:pointer;color:rgba(0,255,247,.4)}
-.tab.active{color:var(--cyan);background:rgba(0,255,247,.05)}
-.panel{flex:1;display:none;overflow:auto}
-.panel.active{display:flex;flex-direction:column}
-.chat{flex:1;overflow:auto;padding:16px}
-.msg{margin-bottom:14px;max-width:85%}
-.msg.user{margin-left:auto;color:#ffc1d6;text-align:right}
-.msg.ai{color:#9ffffa}
-.input{display:flex;border-top:1px solid rgba(0,255,247,.2)}
-textarea{flex:1;background:transparent;border:none;color:var(--cyan);padding:12px;font-family:inherit;outline:none;resize:none}
-button{background:#002026;border:1px solid var(--cyan);color:var(--cyan);padding:10px 16px;cursor:pointer}
-.setup{position:fixed;inset:0;background:#050a0e;display:flex;align-items:center;justify-content:center}
-.box{border:1px solid var(--cyan);padding:26px;width:320px;background:#071017}
-input{width:100%;background:#021418;border:none;border-bottom:2px solid var(--cyan);color:var(--cyan);padding:10px;margin-top:10px}
-.error{color:#ff4c7a;font-size:12px;height:16px;margin-top:6px}
-.ticker{display:flex;gap:16px;padding:6px 12px;border-bottom:1px solid rgba(0,255,247,.15);overflow:auto;font-size:12px}
-.token{border-bottom:1px solid rgba(0,255,247,.1);padding:12px}
-.token b{font-family:Orbitron}
-.small{font-size:11px;color:rgba(0,255,247,.6)}
+body{
+background:#030b0f;
+color:#00f7ff;
+font-family:monospace;
+margin:0;
+padding:0;
+}
+header{
+text-align:center;
+padding:20px;
+font-size:22px;
+letter-spacing:4px;
+border-bottom:1px solid #03343a;
+}
+#ticker{
+padding:10px;
+border-bottom:1px solid #03343a;
+font-size:14px;
+}
+.tabs{
+display:flex;
+}
+.tab{
+flex:1;
+padding:12px;
+text-align:center;
+cursor:pointer;
+border-bottom:1px solid #03343a;
+}
+.tab.active{
+background:#02262b;
+}
+.section{
+display:none;
+padding:10px;
+}
+.section.active{
+display:block;
+}
+.token{
+border-bottom:1px solid #02262b;
+padding:10px;
+display:flex;
+justify-content:space-between;
+}
+.token span{
+font-size:13px;
+}
+input,button{
+background:#01191d;
+border:1px solid #00f7ff;
+color:#00f7ff;
+padding:8px;
+margin:5px 0;
+width:100%;
+}
+#chatBox{
+height:300px;
+overflow:auto;
+border:1px solid #02262b;
+padding:10px;
+margin-bottom:10px;
+}
 </style>
 </head>
-<body><div class="setup" id="setup">
-<div class="box">
-<div style="font-family:Orbitron">OBAN.AI TERMINAL</div>
-<div class="small">Masukkan Groq API key</div>
-<input id="keyInput" placeholder="gsk_xxxxxxxxx">
-<div class="error" id="err"></div>
-<button id="setupBtn">AKTIFKAN SISTEM</button>
-</div>
-</div><div class="header">OBAN TERMINAL</div><div class="ticker" id="ticker">Loading market...</div><div class="tabs">
-<div class="tab active" data-tab="chat">CHAT AI</div>
-<div class="tab" data-tab="trend">TRENDING TOKENS</div>
-</div><div class="panel active" id="chatPanel">
-<div class="chat" id="chat"></div>
-<div class="input">
-<textarea id="msg" rows="1" placeholder="Tanya apa saja..."></textarea>
-<button id="send">Kirim</button>
-</div>
-</div><div class="panel" id="trendPanel">
-<div id="trendList"></div>
+<body><header>OBAN TERMINAL PRO</header><div id="ticker">Loading market...</div><div class="tabs">
+<div class="tab active" onclick="openTab('ai')">AI CHAT</div>
+<div class="tab" onclick="openTab('tokens')">TRENDING TOKENS</div>
+</div><div id="ai" class="section active">
+<input id="apiKey" placeholder="Enter Groq API Key">
+<button onclick="saveKey()">Initialize System</button><div id="chatBox"></div>
+<input id="prompt" placeholder="Ask AI about crypto...">
+<button onclick="sendAI()">Send</button>
+</div><div id="tokens" class="section">
+<div id="tokenList">Loading tokens...</div>
 </div><script>
 let apiKey="";
-let history=[];
 
-const setup=document.getElementById("setup");
-const keyInput=document.getElementById("keyInput");
-const err=document.getElementById("err");
-const setupBtn=document.getElementById("setupBtn");
-const chat=document.getElementById("chat");
-const msg=document.getElementById("msg");
-const send=document.getElementById("send");
+function openTab(id){
+document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
 
-function safeGet(k){try{return localStorage.getItem(k)}catch{return null}}
-function safeSet(k,v){try{localStorage.setItem(k,v)}catch{}}
-
-function init(){
-const k=safeGet("oban_key");
-if(k){apiKey=k;setup.style.display="none"}
-loadTicker();
-loadTrending();
+document.getElementById(id).classList.add('active');
+event.target.classList.add('active');
 }
 
-function doSetup(){
-const k=keyInput.value.trim();
-if(!k){err.textContent="API key kosong";return}
-if(!k.startsWith("gsk_")){err.textContent="Harus diawali gsk_";return}
-apiKey=k;
-safeSet("oban_key",k);
-setup.style.display="none";
-}
-
-function add(role,text){
-const d=document.createElement("div");
-d.className="msg "+role;
-d.textContent=text;
-chat.appendChild(d);
-chat.scrollTop=chat.scrollHeight;
-}
-
-async function sendMsg(){
-const text=msg.value.trim();
-if(!text||!apiKey)return;
-msg.value="";
-add("user",text);
-add("ai","...");
-
-history.push({role:"user",content:text});
-
-try{
-const r=await fetch("https://api.groq.com/openai/v1/chat/completions",{
-method:"POST",
-headers:{"Authorization":"Bearer "+apiKey,"Content-Type":"application/json"},
-body:JSON.stringify({
-model:"llama-3.3-70b-versatile",
-messages:[{role:"system",content:"Kamu adalah OBAN AI, analis crypto dan asisten pintar."},...history],
-max_tokens:800
-})
-});
-
-const data=await r.json();
-chat.lastChild.remove();
-
-if(data.choices){
-const reply=data.choices[0].message.content;
-add("ai",reply);
-history.push({role:"assistant",content:reply});
-}else add("ai","AI error");
-
-}catch(e){
-chat.lastChild.remove();
-add("ai","Connection error");
-}
+function saveKey(){
+apiKey=document.getElementById('apiKey').value;
+localStorage.setItem('groq_key',apiKey);
+alert('System Initialized');
 }
 
 async function loadTicker(){
 try{
-const r=await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true");
-const d=await r.json();
-const t=document.getElementById("ticker");
+let r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd');
+let d=await r.json();
+
+document.getElementById('ticker').innerText=
+`BTC $${d.bitcoin.usd} | ETH $${d.ethereum.usd} | SOL $${d.solana.usd}`;
+}catch(e){
+console.log(e);
+}
+}
+
+async function loadTokens(){
+try{
+let r=await fetch('https://api.dexscreener.com/latest/dex/pairs/solana');
+let d=await r.json();
 
 let html="";
-for(const k in d){
-const p=d[k].usd;
-const c=d[k].usd_24h_change.toFixed(2);
-html+=`${k.toUpperCase()} $${p} (${c}%)`;
+
+let tokens=d.pairs.slice(0,20);
+
+tokens.forEach(t=>{
+html+=`
+<div class="token">
+<div>
+<b>${t.baseToken.name}</b><br>
+<span>${t.baseToken.symbol}</span>
+</div>
+<div>
+<span>$${Number(t.priceUsd).toFixed(6)}</span><br>
+<span>Vol ${Math.round(t.volume.h24)}</span>
+</div>
+</div>`;
+});
+
+document.getElementById('tokenList').innerHTML=html;
+
+}catch(e){
+console.log(e);
+}
 }
 
-t.innerHTML=html;
-}catch{}
-}
+async function sendAI(){
+let prompt=document.getElementById('prompt').value;
+let box=document.getElementById('chatBox');
 
-async function loadTrending(){
+box.innerHTML+=`<div>> ${prompt}</div>`;
+
 try{
-const r=await fetch("https://api.dexscreener.com/token-boosts/top/v1");
-const d=await r.json();
-const list=document.getElementById("trendList");
-list.innerHTML="";
-
-const sol=d.filter(x=>x.chainId==="solana").slice(0,10);
-
-sol.forEach(t=>{
-const el=document.createElement("div");
-el.className="token";
-el.innerHTML=`<b>${t.tokenAddress.slice(0,6)}</b><div class='small'>boost ${t.totalAmount}</div>`;
-list.appendChild(el);
-});
-}catch{}
-}
-
-setupBtn.addEventListener("click",doSetup);
-keyInput.addEventListener("keydown",e=>{if(e.key==='Enter')doSetup()});
-send.addEventListener("click",sendMsg);
-msg.addEventListener("keydown",e=>{if(e.key==='Enter'){e.preventDefault();sendMsg()}});
-
-// tab system
-const tabs=document.querySelectorAll('.tab');
-const chatPanel=document.getElementById('chatPanel');
-const trendPanel=document.getElementById('trendPanel');
-
-tabs.forEach(t=>{
-t.onclick=()=>{
-tabs.forEach(x=>x.classList.remove('active'));
-t.classList.add('active');
-
-if(t.dataset.tab==='chat'){
-chatPanel.classList.add('active');
-trendPanel.classList.remove('active');
-}else{
-trendPanel.classList.add('active');
-chatPanel.classList.remove('active');
-}
-};
+let r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+method:'POST',
+headers:{
+'Content-Type':'application/json',
+'Authorization':'Bearer '+apiKey
+},
+body:JSON.stringify({
+model:'llama3-70b-8192',
+messages:[{role:'user',content:prompt}]
+})
 });
 
-init();
+let d=await r.json();
+
+let reply=d.choices[0].message.content;
+
+box.innerHTML+=`<div>${reply}</div>`;
+box.scrollTop=box.scrollHeight;
+
+}catch(e){
+box.innerHTML+=`<div>AI error</div>`;
+}
+}
+
+loadTicker();
+loadTokens();
+setInterval(loadTicker,20000);
 </script></body>
 </html>
