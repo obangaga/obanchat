@@ -349,20 +349,6 @@ function getChats()       { try { return JSON.parse(localStorage.getItem('oban_c
 function saveChats(c)     { try { localStorage.setItem('oban_chats', JSON.stringify(c)); } catch {} }
 function getChatList()    { return Object.values(getChats()).sort((a,b) => b.updatedAt - a.updatedAt); }
 
-// ══════════════════════════
-//  BOOT
-// ══════════════════════════
-(function init() {
-  if (groqKey) {
-    document.getElementById('modalOverlay').style.display = 'none';
-    setStatus(true);
-    enableInput();
-  }
-  renderSidebar();
-  const list = getChatList();
-  if (list.length) openChat(list[0].id);
-})();
-
 document.getElementById('inputBox').addEventListener('input', () => {
   document.getElementById('sendBtn').disabled = !document.getElementById('inputBox').value.trim() || isLoading;
 });
@@ -755,6 +741,23 @@ Isi: ' + (r.content || r.snippet || '')
   document.getElementById('sendBtn').disabled = !input.value.trim();
   input.focus();
 }
+// ══════════════════════════
+//  BOOT — runs after all functions defined
+// ══════════════════════════
+(function boot() {
+  if (groqKey) {
+    document.getElementById('modalOverlay').style.display = 'none';
+    setStatus(true);
+    enableInput();
+  }
+  if (tavilyKey) {
+    const dot = document.getElementById('searchDot');
+    if (dot) dot.classList.add('ok');
+  }
+  renderSidebar();
+  const list = getChatList();
+  if (list.length) openChat(list[0].id);
+})();
 </script>
 </body>
 </html>
