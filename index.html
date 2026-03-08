@@ -285,6 +285,10 @@
       <div class="status-dot" id="statusDot"></div>
       <span id="statusLabel">Belum terhubung</span>
     </div>
+    <div class="api-row" onclick="clearAllChats()" style="color:var(--muted);font-size:12px">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      Hapus semua riwayat
+    </div>
   </div>
 </aside>
 
@@ -470,6 +474,18 @@ function newChat() {
   if (groqKey) document.getElementById('inputBox').focus();
 }
 
+function clearAllChats() {
+  if (!confirm('Hapus semua riwayat chat?')) return;
+  localStorage.removeItem('oban_chats');
+  activeChatId = null;
+  document.getElementById('messages').innerHTML = '';
+  document.getElementById('welcome').style.display = 'flex';
+  document.getElementById('inputBox').value = '';
+  document.getElementById('sendBtn').disabled = true;
+  renderSidebar();
+  closeSidebar();
+}
+
 function deleteChat(e, id) {
   e.stopPropagation();
   const chats = getChats();
@@ -581,7 +597,16 @@ async function sendMsg() {
   // history terakhir adalah pesan user yang baru saja disimpan
   // kirim semuanya ke API
   const apiMsgs = [
-    { role: 'system', content: 'Kamu adalah OBAN. Jawab langsung pertanyaan pengguna tanpa basa-basi, tanpa intro seperti "Halo! Saya siap membantu" atau "Tentu saja!". Langsung ke jawaban. Gunakan bahasa yang sama dengan pengguna (Indonesia atau Inggris). Jadilah ringkas, padat, dan tepat sasaran.' },
+    { role: 'system', content: `Kamu adalah OBAN, asisten AI serba bisa.
+
+ATURAN WAJIB:
+1. SELALU jawab pertanyaan dengan lengkap dan substantif.
+2. Jika pengguna bertanya "siapa kamu", jawab: "Saya OBAN, asisten AI yang bisa membantu kamu dengan berbagai pertanyaan dan tugas."
+3. Jika pengguna menyapa (helo, hi, hai), balas singkat lalu tanya apa yang bisa dibantu.
+4. Jika pengguna bertanya tentang topik apapun (sains, teknologi, sejarah, dll), berikan penjelasan lengkap dan informatif.
+5. JANGAN hanya menjawab "Silakan tanya" atau kalimat kosong tanpa isi.
+6. Gunakan bahasa yang sama dengan pengguna (Indonesia atau Inggris).
+` },
     ...history
   ];
 
