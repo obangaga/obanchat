@@ -159,8 +159,9 @@ body { display: flex; flex-direction: column; }
 .setup-div { height: 1px; background: linear-gradient(90deg, transparent, var(--cyan), transparent); margin: 18px 0; }
 .setup-box input { width: 100%; background: rgba(0,255,247,0.04); border: none; border-bottom: 2px solid var(--cyan); color: var(--cyan); font-family: 'Share Tech Mono', monospace; font-size: 12px; padding: 10px; outline: none; margin-bottom: 16px; letter-spacing: 1px; }
 .setup-box input::placeholder { color: rgba(0,255,247,0.2); }
-.setup-go { width: 100%; background: transparent; border: 1px solid var(--cyan); color: var(--cyan); font-family: 'Orbitron', monospace; font-size: 12px; font-weight: 700; letter-spacing: 3px; padding: 12px; cursor: pointer; transition: background 0.2s; touch-action: manipulation; }
-.setup-go:active { background: rgba(0,255,247,0.1); }
+.setup-go { width: 100%; background: transparent; border: 1px solid var(--cyan); color: var(--cyan); font-family: 'Orbitron', monospace; font-size: 12px; font-weight: 700; letter-spacing: 3px; padding: 14px; cursor: pointer; transition: background 0.2s; touch-action: manipulation; -webkit-appearance: none; border-radius: 0; }
+.setup-go:active { background: rgba(0,255,247,0.15); }
+.setup-error { font-size: 10px; color: var(--pink); letter-spacing: 1px; text-align: center; margin-top: -10px; margin-bottom: 10px; min-height: 16px; }
 </style>
 </head>
 <body>
@@ -174,8 +175,9 @@ body { display: flex; flex-direction: column; }
     <p>Masukkan Groq API Key untuk mengaktifkan sistem.</p>
     <p style="color:rgba(0,255,247,0.28);font-size:10px;margin-top:3px;">Daftar gratis di console.groq.com</p>
     <div class="setup-div"></div>
-    <input type="password" id="keyInput" placeholder="gsk_xxxxxxxxxxxxxxxx" />
-    <button class="setup-go" id="setupBtn">▶ INISIALISASI SISTEM</button>
+    <input type="text" id="keyInput" placeholder="gsk_xxxxxxxxxxxxxxxx" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+    <div class="setup-error" id="setupError"></div>
+    <button class="setup-go" id="setupBtn" onclick="doSetup()">▶ INISIALISASI SISTEM</button>
   </div>
 </div>
 
@@ -274,15 +276,24 @@ body { display: flex; flex-direction: column; }
   if (apiKey) setupEl.style.display = 'none';
 
   // ── SETUP ──
-  setupBtn.addEventListener('click', function() {
+  window.doSetup = function() {
     const k = keyInput.value.trim();
-    if (!k) return;
+    const errEl = document.getElementById('setupError');
+    if (!k) {
+      errEl.textContent = '⚠ API key tidak boleh kosong';
+      return;
+    }
+    if (!k.startsWith('gsk_')) {
+      errEl.textContent = '⚠ API key harus dimulai dengan gsk_';
+      return;
+    }
+    errEl.textContent = '';
     apiKey = k;
     localStorage.setItem('oban_key', k);
     setupEl.style.display = 'none';
     msgInput.focus();
-  });
-  keyInput.addEventListener('keydown', e => { if (e.key === 'Enter') setupBtn.click(); });
+  };
+  keyInput.addEventListener('keydown', e => { if (e.key === 'Enter') window.doSetup(); });
 
   // ── TABS ──
   window.switchTab = function(tab) {
