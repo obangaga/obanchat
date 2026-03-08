@@ -590,7 +590,6 @@ async function sendMsg() {
   if (!msg || isLoading) return;
   if (!groqKey) { showApiModal(); return; }
 
-  // Buat chat baru otomatis
   if (!activeChatId) { activeChatId = createChat(); renderSidebar(); }
 
   isLoading = true;
@@ -599,25 +598,60 @@ async function sendMsg() {
   input.value = ''; input.style.height = 'auto';
 
   renderMsg('user', msg);
-  renderTyping();
 
-  // Bangun history SETELAH simpan pesan user (sudah include di buildApiHistory)
-  const history = buildApiHistory();
-  // history terakhir adalah pesan user yang baru saja disimpan
-  // kirim semuanya ke API
-  const apiMsgs = [
-    { role: 'system', content: `Kamu adalah OBAN, asisten AI serba bisa.
+  // Detect apakah perlu web search
+  const needsSearch = /berita|terbaru|hari ini|sekarang|terkini|minggu ini|bulan ini|tahun ini|harga|current|latest|news|today|now|2024|2025|2026/i.test(msg);
 
-ATURAN WAJIB:
-1. SELALU jawab pertanyaan dengan lengkap dan substantif.
-2. Jika pengguna bertanya "siapa kamu", jawab: "Saya OBAN, asisten AI yang bisa membantu kamu dengan berbagai pertanyaan dan tugas."
-3. Jika pengguna menyapa (helo, hi, hai), balas singkat lalu tanya apa yang bisa dibantu.
-4. Jika pengguna bertanya tentang topik apapun (sains, teknologi, sejarah, dll), berikan penjelasan lengkap dan informatif.
-5. JANGAN hanya menjawab "Silakan tanya" atau kalimat kosong tanpa isi.
-6. Gunakan bahasa yang sama dengan pengguna (Indonesia atau Inggris).
-` },
-    ...history
-  ];
+  if (needsSearch && tavilyKey) {
+    showSearchStatus('Mencari informasi terkini...');
+    let searchContext = '';
+    try {
+      const sr = await fetch('https://api.tavily.com/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ api_key: tavilyKey, query: msg, search_depth: 'basic', max_results: 5 })
+      });
+      const sd = await sr.json();
+      if (sd.results && sd.results.length) {
+        searchContext = 'Berikut hasil pencarian web terkini:
+
+' +
+          sd.results.map((r,i) => (i+1) + '. ' + r.title + '
+' + (r.content || r.snippet || '') + '
+Sumber: ' + r.url).join('
+
+');
+      }
+    } catch(e) { console.warn('Search failed:', e); }
+    hideSearchStatus();
+
+    if (searchContext) {
+      renderTyping();
+      await callGroq(buildApiHistory(), searchContext);
+      document.getElementById('typingEl')?.remove();
+    } else {
+      renderTyping();
+      await callGroq(buildApiHistory(), '');
+      document.getElementById('typingEl')?.remove();
+    }
+  } else {
+    renderTyping();
+    await callGroq(buildApiHistory(), '');
+    document.getElementById('typingEl')?.remove();
+  }
+
+  isLoading = false;
+  document.getElementById('sendBtn').disabled = !input.value.trim();
+  input.focus();
+}
+
+async function callGroq(history, searchContext) {
+  const systemContent = `Kamu adalah OBAN, asisten AI serba bisa. Jawab langsung tanpa basa-basi.
+Gunakan bahasa yang sama dengan pengguna (Indonesia atau Inggris).
+Jika ada hasil pencarian web di bawah ini, gunakan untuk menjawab dengan informasi terkini.${searchContext ? '
+
+KONTEKS WEB:
+' + searchContext : ''}`;
 
   try {
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -625,122 +659,23 @@ ATURAN WAJIB:
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + groqKey },
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
-        messages: apiMsgs,
+        messages: [ { role: 'system', content: systemContent }, ...history ],
         max_tokens: 1024,
-        temperature: 0.7,
-        tools: [{
-          type: 'function',
-          function: {
-            name: 'web_search',
-            description: 'Search the web for current news, events, prices, or any real-time information.',
-            parameters: {
-              type: 'object',
-              properties: {
-                query: { type: 'string', description: 'Search query' }
-              },
-              required: ['query']
-            }
-          }
-        }],
-        tool_choice: 'auto'
+        temperature: 0.7
       })
     });
     const data = await res.json();
-    document.getElementById('typingEl')?.remove();
-
     if (data.error) {
       renderMsg('ai', '⚠ Error: ' + data.error.message);
-      isLoading = false;
-      document.getElementById('sendBtn').disabled = false;
-      return;
-    }
-
-    const choice = data.choices[0];
-
-    // Model ingin search web
-    if (choice.finish_reason === 'tool_calls' || choice.message?.tool_calls?.length) {
-      const toolCall = choice.message.tool_calls[0];
-      const query = JSON.parse(toolCall.function.arguments).query;
-
-      // Tampilkan status searching
-      showSearchStatus(query);
-
-      // Lakukan web search via Tavily (free tier)
-      let searchResult = '';
-      try {
-        const sr = await fetch('https://api.tavily.com/search', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            api_key: tavilyKey || 'tvly-demo',
-            query: query,
-            search_depth: 'basic',
-            max_results: 5
-          })
-        });
-        const sd = await sr.json();
-        if (sd.results?.length) {
-          searchResult = sd.results.map(r =>
-            'Judul: ' + r.title + '
-URL: ' + r.url + '
-Isi: ' + (r.content || r.snippet || '')
-          ).join('
-
-');
-        } else {
-          searchResult = 'Tidak ada hasil ditemukan.';
-        }
-      } catch(se) {
-        searchResult = 'Web search gagal: ' + se.message;
-      }
-
-      hideSearchStatus();
-
-      // Kirim hasil search kembali ke model
-      const msgsWithTool = [
-        ...apiMsgs,
-        choice.message,
-        {
-          role: 'tool',
-          tool_call_id: toolCall.id,
-          content: searchResult
-        }
-      ];
-
-      renderTyping();
-      const res2 = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + groqKey },
-        body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
-          messages: msgsWithTool,
-          max_tokens: 1024,
-          temperature: 0.7
-        })
-      });
-      const data2 = await res2.json();
-      document.getElementById('typingEl')?.remove();
-      if (data2.error) {
-        renderMsg('ai', '⚠ Error: ' + data2.error.message);
-      } else {
-        renderMsg('ai', data2.choices[0].message.content);
-      }
-
     } else {
-      // Jawab langsung tanpa search
-      renderMsg('ai', choice.message.content);
+      renderMsg('ai', data.choices[0].message.content);
     }
-
   } catch(e) {
-    document.getElementById('typingEl')?.remove();
-    hideSearchStatus();
-    renderMsg('ai', '⚠ Koneksi gagal. Cek internet dan API key kamu.');
+    renderMsg('ai', '⚠ Koneksi gagal: ' + e.message);
   }
-
-  isLoading = false;
-  document.getElementById('sendBtn').disabled = !input.value.trim();
-  input.focus();
 }
+
+
 // ══════════════════════════
 //  BOOT — runs after all functions defined
 // ══════════════════════════
